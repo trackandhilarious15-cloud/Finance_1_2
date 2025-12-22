@@ -189,6 +189,11 @@
             <select id="school-select">
                 <option value="">Select School</option>
             </select>
+            
+            <select id="grade-select" disabled>
+            <option value="">Select Grade</option>
+            </select>
+            
             <select id="name-select" disabled>
                 <option value="">Select Name</option>
             </select>
@@ -225,7 +230,7 @@
         // Google Sheets API Configuration for Student Data
         const STUDENT_API_KEY = 'AIzaSyDQd2zlNNH1mXz6otZgSYywj9XkXfmL0QI'; // API Key for Student Data
         const STUDENT_SHEET_ID = '1KJP_B3kLUotGkt4w3vQjLtFUiC5XikqaAejIA4U14Tg'; // Sheet ID for Student Data
-        const STUDENT_RANGE = 'Sheet1!A:D'; // Columns: Sr. No., School, Name, Password
+        const STUDENT_RANGE = 'Sheet1!A:E'; // Columns: Sr. No., School, Name, Password
 
         let studentData = [];
         let currentUser = null;
@@ -250,8 +255,9 @@
                     studentData = rows.slice(1).map(row => ({
                         srNo: row[0],
                         school: row[1],
-                        name: row[2],
-                        password: row[3]
+                        grade: row[2],
+                        name: row[3],
+                        password: row[4]
                     }));
                     populateSchools();
                 }
@@ -262,34 +268,79 @@
         }
 
         function populateSchools() {
-            const schools = [...new Set(studentData.map(item => item.school))];
-            const schoolSelect = document.getElementById('school-select');
-            schools.forEach(school => {
-                const option = document.createElement('option');
-                option.value = school;
-                option.textContent = school;
-                schoolSelect.appendChild(option);
-            });
-        }
+    const schools = [...new Set(studentData.map(item => item.school))];
+    const schoolSelect = document.getElementById('school-select');
+    schools.forEach(school => {
+        const option = document.createElement('option');
+        option.value = school;
+        option.textContent = school;
+        schoolSelect.appendChild(option);
+    });
+}
 
-        document.getElementById('school-select').addEventListener('change', (e) => {
-            const selectedSchool = e.target.value;
-            const nameSelect = document.getElementById('name-select');
-            nameSelect.innerHTML = '<option value="">Select Name</option>';
-            if (selectedSchool) {
-                const names = studentData.filter(item => item.school === selectedSchool).map(item => item.name);
-                names.forEach(name => {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
-                    nameSelect.appendChild(option);
-                });
-                nameSelect.disabled = false;
-            } else {
-                nameSelect.disabled = true;
-                document.getElementById('password-input').disabled = true;
-            }
+/* ✅ ADD THIS RIGHT BELOW populateSchools() */
+function populateGrades(selectedSchool) {
+    const gradeSelect = document.getElementById('grade-select');
+    gradeSelect.innerHTML = '<option value="">Select Grade</option>';
+
+    const grades = [
+        ...new Set(
+            studentData
+                .filter(item => item.school === selectedSchool)
+                .map(item => item.grade)
+        )
+    ];
+
+    grades.forEach(grade => {
+        const option = document.createElement('option');
+        option.value = grade;
+        option.textContent = grade;
+        gradeSelect.appendChild(option);
+    });
+
+    gradeSelect.disabled = false;
+}
+
+document.getElementById('school-select').addEventListener('change', (e) => {
+    const selectedSchool = e.target.value;
+
+    document.getElementById('grade-select').innerHTML =
+        '<option value="">Select Grade</option>';
+    document.getElementById('grade-select').disabled = true;
+    document.getElementById('name-select').disabled = true;
+    document.getElementById('password-input').disabled = true;
+
+    if (selectedSchool) {
+        populateGrades(selectedSchool);
+    }
+});
+
+document.getElementById('grade-select').addEventListener('change', (e) => {
+    const selectedGrade = e.target.value;
+    const selectedSchool = document.getElementById('school-select').value;
+    const nameSelect = document.getElementById('name-select');
+
+    nameSelect.innerHTML = '<option value="">Select Name</option>';
+
+    if (selectedGrade) {
+        const names = studentData
+            .filter(item =>
+                item.school === selectedSchool &&
+                item.grade === selectedGrade
+            )
+            .map(item => item.name);
+
+        names.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            nameSelect.appendChild(option);
         });
+
+        nameSelect.disabled = false;
+    }
+});
+
 
         document.getElementById('name-select').addEventListener('change', (e) => {
             const passwordInput = document.getElementById('password-input');
@@ -305,20 +356,27 @@
         const nameSelect = document.getElementById('name-select');
 
         passwordSubmit.addEventListener('click', () => {
-            const selectedSchool = schoolSelect.value;
-            const selectedName = nameSelect.value;
-            const enteredPassword = passwordInput.value;
+    const selectedSchool = schoolSelect.value;
+    const selectedGrade =
+        document.getElementById('grade-select').value; // 👈 ADD THIS
+    const selectedName = nameSelect.value;
+    const enteredPassword = passwordInput.value;
 
-            const student = studentData.find(item => item.school === selectedSchool && item.name === selectedName);
-            if (student && student.password === enteredPassword) {
-                currentUser = `${selectedSchool}-${selectedName}`;
-                passwordScreen.style.display = 'none';
-                gameScreen.style.display = 'block';
-                initializeGame();
-            } else {
-                alert('Incorrect Password or Details ❌');
-            }
-        });
+    const student = studentData.find(item =>
+        item.school === selectedSchool &&
+        item.grade === selectedGrade &&   // 👈 ADD THIS
+        item.name === selectedName
+    );
+
+    if (student && student.password === enteredPassword) {
+        currentUser = `${selectedSchool}-${selectedGrade}-${selectedName}`;
+        passwordScreen.style.display = 'none';
+        gameScreen.style.display = 'block';
+        initializeGame();
+    } else {
+        alert('Incorrect Password or Details ❌');
+    }
+});
 
         // Game Variables
         let cash = 10000;
