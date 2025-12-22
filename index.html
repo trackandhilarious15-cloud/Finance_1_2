@@ -7,6 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script> <!-- Google API for Sheets -->
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -25,6 +26,7 @@
             width: 90%;
             max-width: 1200px;
             text-align: center;
+            position: relative;
         }
 
         #password-screen {
@@ -41,13 +43,13 @@
             color: #4682B4;
         }
 
-        #password-input {
+        select, #password-input {
             padding: 10px;
             font-size: 1.2em;
             border: 2px solid #4682B4;
             border-radius: 10px;
             width: 200px;
-            margin-right: 10px;
+            margin: 10px;
         }
 
         #password-submit {
@@ -183,8 +185,14 @@
 <body>
     <div class="container">
         <div id="password-screen">
-            <h1>Enter Password</h1>
-            <input type="password" id="password-input" placeholder="Password">
+            <h1>Enter Details</h1>
+            <select id="school-select">
+                <option value="">Select School</option>
+            </select>
+            <select id="name-select" disabled>
+                <option value="">Select Name</option>
+            </select>
+            <input type="password" id="password-input" placeholder="Password" disabled>
             <button id="password-submit">Submit</button>
         </div>
         <div id="game-screen">
@@ -205,6 +213,7 @@
                 </tbody>
             </table>
             <button id="next-day">Next Day</button>
+            <button id="restart-game" style="display:none;">Restart Game</button>
             <div id="portfolio">Portfolio Value: ₹10,000 | Cash: ₹10,000</div>
             <div id="chart-container">
                 <canvas id="stock-chart"></canvas>
@@ -213,20 +222,101 @@
     </div>
 
     <script>
+        // Google Sheets API Configuration for Student Data
+        const STUDENT_API_KEY = 'AIzaSyDQd2zlNNH1mXz6otZgSYywj9XkXfmL0QI'; // API Key for Student Data
+        const STUDENT_SHEET_ID = '1KJP_B3kLUotGkt4w3vQjLtFUiC5XikqaAejIA4U14Tg'; // Sheet ID for Student Data
+        const STUDENT_RANGE = 'Sheet1!A:D'; // Columns: Sr. No., School, Name, Password
+
+        let studentData = [];
+        let currentUser = null;
+
+        // Load Google API for Student Data
+        gapi.load('client', () => {
+            gapi.client.init({
+                apiKey: STUDENT_API_KEY,
+                discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+            }).then(() => {
+                fetchStudentData();
+            });
+        });
+
+        function fetchStudentData() {
+            gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: STUDENT_SHEET_ID,
+                range: STUDENT_RANGE,
+            }).then((response) => {
+                const rows = response.result.values;
+                if (rows.length > 1) {
+                    studentData = rows.slice(1).map(row => ({
+                        srNo: row[0],
+                        school: row[1],
+                        name: row[2],
+                        password: row[3]
+                    }));
+                    populateSchools();
+                }
+            }).catch((error) => {
+                console.error('Error fetching student data:', error);
+                alert('Failed to load student data. Please try again later.');
+            });
+        }
+
+        function populateSchools() {
+            const schools = [...new Set(studentData.map(item => item.school))];
+            const schoolSelect = document.getElementById('school-select');
+            schools.forEach(school => {
+                const option = document.createElement('option');
+                option.value = school;
+                option.textContent = school;
+                schoolSelect.appendChild(option);
+            });
+        }
+
+        document.getElementById('school-select').addEventListener('change', (e) => {
+            const selectedSchool = e.target.value;
+            const nameSelect = document.getElementById('name-select');
+            nameSelect.innerHTML = '<option value="">Select Name</option>';
+            if (selectedSchool) {
+                const names = studentData.filter(item => item.school === selectedSchool).map(item => item.name);
+                names.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    nameSelect.appendChild(option);
+                });
+                nameSelect.disabled = false;
+            } else {
+                nameSelect.disabled = true;
+                document.getElementById('password-input').disabled = true;
+            }
+        });
+
+        document.getElementById('name-select').addEventListener('change', (e) => {
+            const passwordInput = document.getElementById('password-input');
+            passwordInput.disabled = !e.target.value;
+        });
+
         // Password Protection
-        const password = "9324459446";
         const passwordScreen = document.getElementById('password-screen');
         const gameScreen = document.getElementById('game-screen');
         const passwordInput = document.getElementById('password-input');
         const passwordSubmit = document.getElementById('password-submit');
+        const schoolSelect = document.getElementById('school-select');
+        const nameSelect = document.getElementById('name-select');
 
         passwordSubmit.addEventListener('click', () => {
-            if (passwordInput.value === password) {
+            const selectedSchool = schoolSelect.value;
+            const selectedName = nameSelect.value;
+            const enteredPassword = passwordInput.value;
+
+            const student = studentData.find(item => item.school === selectedSchool && item.name === selectedName);
+            if (student && student.password === enteredPassword) {
+                currentUser = `${selectedSchool}-${selectedName}`;
                 passwordScreen.style.display = 'none';
                 gameScreen.style.display = 'block';
                 initializeGame();
             } else {
-                alert('Incorrect Password ❌');
+                alert('Incorrect Password or Details ❌');
             }
         });
 
@@ -236,13 +326,19 @@
         let day = 1;
         let goodMoves = 0;
         let blunders = 0;
+        const MAX_DAYS = 30;    
+        let gameEnded = false;
         const initialStocks = [
             { name: 'JAS-47', price: 100, owned: 0, history: [100] },
             { name: 'Finstagram', price: 150, owned: 0, history: [150] },
             { name: 'CFDH Bank', price: 200, owned: 0, history: [200] },
             { name: 'Infokix', price: 80, owned: 0, history: [80] },
             { name: 'DMW', price: 120, owned: 0, history: [120] },
-            { name: 'Artix', price: 90, owned: 0, history: [90] }
+            { name: 'Artix', price: 90, owned: 0, history: [90] },
+            { name: 'No Bank', price: 180, owned: 0, history: [180] },
+            { name: 'Batata Steel', price: 110, owned: 0, history: [110] },
+            { name: 'DNA Cosmetics', price: 95, owned: 0, history: [95] },
+            { name: 'Devdas', price: 130, owned: 0, history: [130] }
         ];
         let stocks = JSON.parse(JSON.stringify(initialStocks)); // Deep copy
 
@@ -252,209 +348,258 @@
             'CFDH Bank': '#FFCE56',
             'Infokix': '#4BC0C0',
             'DMW': '#9966FF',
-            'Artix': '#FF9F40'
+            'Artix': '#FF9F40',
+            'No Bank': '#FF5733',
+            'Batata Steel': '#33FF57',
+            'DNA Cosmetics': '#3357FF',
+            'Devdas': '#FF33A8'
         };
-
-        const newsDiv = document.getElementById('news');
-        const stockBody = document.getElementById('stock-body');
-        const portfolioDiv = document.getElementById('portfolio');
-        const nextDayBtn = document.getElementById('next-day');
-        let chart;
-
-        // Initialize Game
+        let stockChart;
+        const newsEvents = [
+            { text: 'Market is bullish today! Most stocks are up.', effect: (stock) => stock.price *= 1.1 },
+            { text: 'Market is bearish today! Most stocks are down.', effect: (stock) => stock.price *= 0.9 },
+            { text: 'JAS-47 launches a new product, price soars!', effect: (stock) => stock.name === 'JAS-47' ? stock.price *= 1.3 : null },
+            { text: 'Finstagram faces data breach, price plummets!', effect: (stock) => stock.name === 'Finstagram' ? stock.price *= 0.7 : null },
+            { text: 'CFDH Bank reports record profits, stock rises!', effect: (stock) => stock.name === 'CFDH Bank' ? stock.price *= 1.2 : null },
+            { text: 'Infokix hit by regulatory fines, stock falls!', effect: (stock) => stock.name === 'Infokix' ? stock.price *= 0.8 : null },
+            { text: 'DMW acquires a competitor, stock surges!', effect: (stock) => stock.name === 'DMW' ? stock.price *= 1.25 : null },
+            { text: 'Artix faces supply chain issues, stock dips!', effect: (stock) => stock.name === 'Artix' ? stock.price *= 0.85 : null },
+            { text: 'No Bank expands internationally, stock climbs!', effect: (stock) => stock.name === 'No Bank' ? stock.price *= 1.15 : null },
+            { text: 'Batata Steel wins major contract, stock jumps!', effect: (stock) => stock.name === 'Batata Steel' ? stock.price *= 1.2 : null },
+            { text: 'DNA Cosmetics launches viral campaign, stock rises!', effect: (stock) => stock.name === 'DNA Cosmetics' ? stock.price *= 1.3 : null },
+            { text: 'Devdas faces leadership turmoil, stock drops!', effect: (stock) => stock.name === 'Devdas' ? stock.price *= 0.75 : null }
+        ];
         function initializeGame() {
-            renderStocks();
-            updatePortfolio();
+            renderStockTable();
+            updatePortfolioDisplay();
             initializeChart();
         }
-
-        // Render Stocks Table (sorted by price descending)
-        function renderStocks() {
-            stocks.sort((a, b) => b.price - a.price);
+        function renderStockTable() {
+            const stockBody = document.getElementById('stock-body');
             stockBody.innerHTML = '';
-            stocks.forEach((stock) => {
-                const row = document.createElement('tr');
-                row.id = `row-${stock.name}`;
-                row.innerHTML = `
+            stocks.forEach((stock, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
                     <td>${stock.name}</td>
-                    <td>₹${stock.price}</td>
-                    <td>${stock.owned}</td>
-                    <td><input type="number" min="0" id="buy-${stock.name}" placeholder="Qty"><button onclick="buyStock('${stock.name}')">Buy</button></td>
-                    <td><input type="number" min="0" id="sell-${stock.name}" placeholder="Qty"><button onclick="sellStock('${stock.name}')">Sell</button></td>
+                    <td id="price-${index}">₹${stock.price.toFixed(2)}</td>
+                    <td id="owned-${index}">${stock.owned}</td>
+                    <td>
+                        <input type="number" id="buy-qty-${index}" min="1" value="1">
+                        <button onclick="buyStock(${index})">Buy</button>
+                    </td>
+                    <td>
+                        <input type="number" id="sell-qty-${index}" min="1" value="1">
+                        <button onclick="sellStock(${index})">Sell</button>
+                    </td>
                 `;
-                stockBody.appendChild(row);
+                stockBody.appendChild(tr);
             });
         }
-
-        // Buy Stock
-        function buyStock(name) {
-            const stock = stocks.find(s => s.name === name);
-            const qty = parseInt(document.getElementById(`buy-${name}`).value) || 0;
-            const cost = qty * stock.price;
-            if (cost > cash) {
-                alert('Insufficient cash! 💸');
-                return;
-            }
-            stock.owned += qty;
-            cash -= cost;
-            // Evaluate move: Buying when price > initial is a blunder
-            if (stock.price > stock.history[0]) {
-                blunders++;
-            } else {
+        function buyStock(index) {
+            const qtyInput = document.getElementById(`buy-qty-${index}`);
+            const quantity = parseInt(qtyInput.value);
+            const stock = stocks[index];
+            const cost = stock.price * quantity;
+            if (quantity > 0 && cost <= cash) {
+                stock.owned += quantity;
+                cash -= cost;
                 goodMoves++;
+                flashRow(index);
+                renderStockTable();
+                updatePortfolioDisplay();
+            } else {
+                alert('Insufficient funds or invalid quantity!');
             }
-            updatePortfolio();
-            renderStocks();
         }
-
-        // Sell Stock
-        function sellStock(name) {
-            const stock = stocks.find(s => s.name === name);
-            const qty = parseInt(document.getElementById(`sell-${name}`).value) || 0;
-            if (qty > stock.owned) {
-                alert('You don\'t own that many shares! 📉');
-                return;
-            }
-            stock.owned -= qty;
-            cash += qty * stock.price;
-            // Evaluate move: Selling when price > initial is a good move
-            if (stock.price > stock.history[0]) {
+        function sellStock(index) {
+            const qtyInput = document.getElementById(`sell-qty-${index}`);
+            const quantity = parseInt(qtyInput.value);
+            const stock = stocks[index];
+            if (quantity > 0 && quantity <= stock.owned) {
+                stock.owned -= quantity;
+                cash += stock.price * quantity;
                 goodMoves++;
+                flashRow(index);
+                renderStockTable();
+                updatePortfolioDisplay();
             } else {
-                blunders++;
+                alert('Insufficient stock owned or invalid quantity!');
             }
-            updatePortfolio();
-            renderStocks();
         }
-
-        // Update Portfolio
-        function updatePortfolio() {
-            portfolioValue = cash + stocks.reduce((sum, stock) => sum + (stock.owned * stock.price), 0);
-            portfolioDiv.textContent = `Portfolio Value: ₹${portfolioValue.toFixed(2)} | Cash: ₹${cash.toFixed(2)}`;
+        function flashRow(index) {
+            const row = document.getElementById(`price-${index}`).parentElement;
+            row.classList.add('flash');
+            setTimeout(() => {
+                row.classList.remove('flash');
+            }, 500);
         }
-
-        // Next Day / Restart Logic
-        nextDayBtn.addEventListener('click', () => {
-            if (day >= 30) {
-                restartGame();
-            } else {
-                nextDay();
-            }
-        });
-
         function nextDay() {
-            day++;
-            // Random price changes
-            stocks.forEach((stock) => {
-                const change = Math.floor(Math.random() * 11) - 5; // -5 to +5
-                stock.price = Math.max(1, stock.price + change); // Prevent negative prices
-                stock.history.push(stock.price);
-                // Flash row
-                const row = document.getElementById(`row-${stock.name}`);
-                row.classList.add('flash');
-                setTimeout(() => row.classList.remove('flash'), 500);
-            });
+    if (day >= MAX_DAYS) {
+        endGame();
+        return;
+    }
 
-            // Random event
-            triggerRandomEvent();
+    day++;
 
-            renderStocks();
-            updatePortfolio();
-            updateChart();
+    const event = newsEvents[Math.floor(Math.random() * newsEvents.length)];
+    document.getElementById('news').textContent = `Day ${day}: ${event.text}`;
 
-            if (day >= 30) {
-                endGame();
-            }
+    stocks.forEach(stock => {
+        const oldPrice = stock.price;
+        event.effect(stock);
+
+        const fluctuation = (Math.random() * 0.1) + 0.95;
+        stock.price *= fluctuation;
+        stock.price = Math.max(1, stock.price);
+
+        stock.history.push(stock.price);
+
+        if (stock.price < oldPrice * 0.9) {
+            blunders++;
         }
+    });
 
-        // End Game Analysis
+    renderStockTable();
+    updatePortfolioDisplay();
+    updateChart();
+
+    if (day === MAX_DAYS) {
+        endGame();
+    }
+}
         function endGame() {
-            nextDayBtn.textContent = "Restart";
-            newsDiv.innerHTML = `
-                <strong>Game Over!</strong><br>
-                You played for 30 days.<br>
-                Good Moves: ${goodMoves}<br>
-                Blunders: ${blunders}<br>
-                Final Portfolio Value: ₹${portfolioValue.toFixed(2)}<br>
-                ${portfolioValue > 10000 ? 'Great job! You made a profit!' : portfolioValue < 10000 ? 'Oops, you lost money. Better luck next time!' : 'You broke even!'}
-            `;
+    if (gameEnded) return;   // ⛔ stop double save
+    gameEnded = true;
+    updatePortfolioDisplay(); // ensure final value is correct
+
+    document.getElementById('news').textContent =
+        `Game Over! You completed ${MAX_DAYS} days 🎉 Final Portfolio: ₹${portfolioValue.toFixed
+(2)} | Good Moves: ${goodMoves} | Blunders: ${blunders}`;
+    document.getElementById('next-day').style.display = 'none';
+    document.getElementById('restart-game').style.display = 'inline-block';
+
+    saveGameData();
+}
+        function updatePortfolioDisplay() {
+            portfolioValue = cash + stocks.reduce((sum, stock) => sum + (stock.price * stock.owned), 0);
+            document.getElementById('portfolio').textContent =
+                `Portfolio Value: ₹${portfolioValue.toFixed(2)} | Cash: ₹${cash.toFixed(2)}`;
         }
-
-        // Restart Game
-        function restartGame() {
-            cash = 10000;
-            portfolioValue = 10000;
-            day = 1;
-            goodMoves = 0;
-            blunders = 0;
-            stocks = JSON.parse(JSON.stringify(initialStocks)); // Reset stocks
-            nextDayBtn.textContent = "Next Day";
-            newsDiv.textContent = "Welcome to the stock market! Watch for news events that affect prices.";
-            renderStocks();
-            updatePortfolio();
-            initializeChart(); // Reinitialize chart with new data
-        }
-
-        // Random Events
-        const events = [
-            { message: "Tech Boom! All tech stocks +10%", affect: ['JAS-47', 'Finstagram', 'Infokix'], change: 10 },
-            { message: "Bank Crisis! CFDH Bank -15%", affect: ['CFDH Bank'], change: -15 },
-            { message: "Market Crash! All stocks -5%", affect: 'all', change: -5 },
-            { message: "Art Renaissance! Artix +20%", affect: ['Artix'], change: 20 },
-            { message: "Economic Growth! All stocks +3%", affect: 'all', change: 3 }
-        ];
-
-        function triggerRandomEvent() {
-            if (Math.random() < 0.3) { // 30% chance
-                const event = events[Math.floor(Math.random() * events.length)];
-                newsDiv.textContent = event.message;
-                stocks.forEach(stock => {
-                    if (event.affect === 'all' || event.affect.includes(stock.name)) {
-                        stock.price = Math.max(1, stock.price + (stock.price * event.change / 100));
-                        stock.history[stock.history.length - 1] = stock.price; // Update last history
-                    }
-                });
-            } else {
-                newsDiv.textContent = "No major news today. Prices fluctuated normally.";
-            }
-        }
-
-        // Chart.js Initialization
         function initializeChart() {
-            if (chart) {
-                chart.destroy(); // Destroy existing chart
-            }
             const ctx = document.getElementById('stock-chart').getContext('2d');
-            chart = new Chart(ctx, {
+            stockChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array.from({ length: stocks[0].history.length }, (_, i) => `Day ${i + 1}`),
+                    labels: Array.from({ length: day }, (_, i) => `Day ${i + 1}`),
                     datasets: stocks.map(stock => ({
                         label: stock.name,
                         data: stock.history,
                         borderColor: colorMap[stock.name],
-                        fill: false
+                        fill: false,
+                        tension: 0.1
                     }))
                 },
                 options: {
                     responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Stock Price History'
+                        }
+                    },
                     scales: {
                         y: {
-                            beginAtZero: false
+                            beginAtZero: true
                         }
                     }
                 }
             });
         }
-
-        // Update Chart
         function updateChart() {
-            chart.data.labels = Array.from({ length: stocks[0].history.length }, (_, i) => `Day ${i + 1}`);
-            chart.data.datasets.forEach(dataset => {
-                const stock = stocks.find(s => s.name === dataset.label);
-                dataset.data = stock.history;
+            stockChart.data.labels = Array.from({ length: day }, (_, i) => `Day ${i + 1}`);
+            stockChart.data.datasets.forEach((dataset, index) => {
+                dataset.data = stocks[index].history;
             });
-            chart.update();
+            stockChart.update();
+        }
+        function resetGame() {
+            if (!currentUser) {
+                // No user logged in: show login screen
+                passwordScreen.style.display = 'block';
+                gameScreen.style.display = 'none';
+                return;
+            }
+
+            // Reset core game state
+            cash = 10000;
+            portfolioValue = 10000;
+            day = 1;
+            goodMoves = 0;
+            blunders = 0;
+            gameEnded = false;
+
+            // Deep copy initial stocks and reset history
+            stocks = JSON.parse(JSON.stringify(initialStocks));
+            stocks.forEach(stock => {
+                stock.history = [stock.price];
+                stock.owned = 0;
+            });
+
+            // Restore UI
+            passwordScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            document.getElementById('news').textContent = 'Welcome to the stock market! Watch for news events that affect prices.';
+            document.getElementById('next-day').style.display = 'inline-block';
+            document.getElementById('restart-game').style.display = 'none';
+
+            // Re-render and re-init chart
+            renderStockTable();
+            updatePortfolioDisplay();
+            if (stockChart) {
+                try { stockChart.destroy(); } catch (e) { /* ignore */ }
+            }
+            initializeChart();
+        }
+
+        document.getElementById('next-day').addEventListener('click', nextDay);
+        document.getElementById('restart-game').addEventListener('click', resetGame);
+        // Save Game Data to Google Sheets
+        const GAME_API_KEY = 'AIzaSyCqD3hX1mXz6otZgSYywj9XkXfmL0QI'; // API Key for Game Data
+        const GAME_SHEET_ID = '1LJP_B3kLUotGkt4w3vQjLtFUiC5XikqaAejIA4U14Tg'; // Sheet ID for Game Data
+        const GAME_RANGE = 'Sheet1!A:F'; // Columns: User, Date, Portfolio Value, Good Moves, Blunders, Days Played
+        function saveGameData() {
+            gapi.client.init({
+                apiKey: GAME_API_KEY,
+                discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+            }).then(() => {
+                const date = new Date().toLocaleDateString();
+                const values = [
+                    [
+                        currentUser,
+                        date,
+                        portfolioValue.toFixed(2),
+                        goodMoves,
+                        blunders,
+                        day
+                    ]
+                ];
+                const body = {
+                    values: values
+                };
+                gapi.client.sheets.spreadsheets.values.append({
+                    spreadsheetId: GAME_SHEET_ID,
+                    range: GAME_RANGE,
+                    valueInputOption: 'RAW',
+                    resource: body
+                }).then((response) => {
+                    console.log('Game data saved successfully:', response);
+                }).catch((error) => {
+                    console.error('Error saving game data:', error);
+                });
+            });
         }
     </script>
 </body>
