@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Game</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #87CEEB, #4682B4);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            text-align: center;
+        }
+
+        #password-screen {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        #password-screen h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #4682B4;
+        }
+
+        #password-input {
+            padding: 10px;
+            font-size: 1.2em;
+            border: 2px solid #4682B4;
+            border-radius: 10px;
+            width: 200px;
+            margin-right: 10px;
+        }
+
+        #password-submit {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background: #4682B4;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #password-submit:hover {
+            background: #5A9BD4;
+        }
+
+        #game-screen {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5em;
+            color: #4682B4;
+            margin-bottom: 20px;
+        }
+
+        #news {
+            background: #E0F7FA;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #4682B4;
+            color: white;
+            font-weight: 500;
+        }
+
+        tr:hover {
+            background: #F0F8FF;
+        }
+
+        .flash {
+            animation: flash 0.5s ease-in-out;
+        }
+
+        @keyframes flash {
+            0% { background-color: #FFD700; }
+            50% { background-color: #FFFF00; }
+            100% { background-color: transparent; }
+        }
+
+        input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #4682B4;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 8px 15px;
+            background: #4682B4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            margin: 0 5px;
+        }
+
+        button:hover {
+            background: #5A9BD4;
+            transform: scale(1.05);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        #next-day {
+            margin: 20px 0;
+            padding: 15px 30px;
+            font-size: 1.2em;
+        }
+
+        #portfolio {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        #chart-container {
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 0.9em;
+            }
+            input[type="number"] {
+                width: 50px;
+            }
+            button {
+                padding: 6px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="password-screen">
+            <h1>Enter Password</h1>
+            <input type="password" id="password-input" placeholder="Password">
+            <button id="password-submit">Submit</button>
+        </div>
+        <div id="game-screen">
+            <h1>Stock Market Simulator</h1>
+            <div id="news">Welcome to the stock market! Watch for news events that affect prices.</div>
+            <table id="stock-table">
+                <thead>
+                    <tr>
+                        <th>Stock Name</th>
+                        <th>Price (₹)</th>
+                        <th>Owned</th>
+                        <th>Buy</th>
+                        <th>Sell</th>
+                    </tr>
+                </thead>
+                <tbody id="stock-body">
+                    <!-- Stocks will be populated here -->
+                </tbody>
+            </table>
+            <button id="next-day">Next Day</button>
+            <div id="portfolio">Portfolio Value: ₹10,000 | Cash: ₹10,000</div>
+            <div id="chart-container">
+                <canvas id="stock-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password Protection
+        const password = "9324459446";
+        const passwordScreen = document.getElementById('password-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const passwordInput = document.getElementById('password-input');
+        const passwordSubmit = document.getElementById('password-submit');
+
+        passwordSubmit.addEventListener('click', () => {
+            if (passwordInput.value === password) {
+                passwordScreen.style.display = 'none';
+                gameScreen.style.display = 'block';
+                initializeGame();
+            } else {
+                alert('Incorrect Password ❌');
+            }
+        });
+
+        // Game Variables
+        let cash = 10000;
+        let portfolioValue = 10000;
+        let day = 1;
+        let goodMoves = 0;
+        let blunders = 0;
+        const initialStocks = [
+            { name: 'JAS-47', price: 100, owned: 0, history: [100] },
+            { name: 'Finstagram', price: 150, owned: 0, history: [150] },
+            { name: 'CFDH Bank', price: 200, owned: 0, history: [200] },
+            { name: 'Infokix', price: 80, owned: 0, history: [80] },
+            { name: 'DMW', price: 120, owned: 0, history: [120] },
+            { name: 'Artix', price: 90, owned: 0, history: [90] }
+        ];
+        let stocks = JSON.parse(JSON.stringify(initialStocks)); // Deep copy
+
+        const colorMap = {
+            'JAS-47': '#FF6384',
+            'Finstagram': '#36A2EB',
+            'CFDH Bank': '#FFCE56',
+            'Infokix': '#4BC0C0',
+            'DMW': '#9966FF',
+            'Artix': '#FF9F40'
+        };
+
+        const newsDiv = document.getElementById('news');
+        const stockBody = document.getElementById('stock-body');
+        const portfolioDiv = document.getElementById('portfolio');
+        const nextDayBtn = document.getElementById('next-day');
+        let chart;
+
+        // Initialize Game
+        function initializeGame() {
+            renderStocks();
+            updatePortfolio();
+            initializeChart();
+        }
+
+        // Render Stocks Table (sorted by price descending)
+        function renderStocks() {
+            stocks.sort((a, b) => b.price - a.price);
+            stockBody.innerHTML = '';
+            stocks.forEach((stock) => {
+                const row = document.createElement('tr');
+                row.id = `row-${stock.name}`;
+                row.innerHTML = `
+                    <td>${stock.name}</td>
+                    <td>₹${stock.price}</td>
+                    <td>${stock.owned}</td>
+                    <td><input type="number" min="0" id="buy-${stock.name}" placeholder="Qty"><button onclick="buyStock('${stock.name}')">Buy</button></td>
+                    <td><input type="number" min="0" id="sell-${stock.name}" placeholder="Qty"><button onclick="sellStock('${stock.name}')">Sell</button></td>
+                `;
+                stockBody.appendChild(row);
+            });
+        }
+
+        // Buy Stock
+        function buyStock(name) {
+            const stock = stocks.find(s => s.name === name);
+            const qty = parseInt(document.getElementById(`buy-${name}`).value) || 0;
+            const cost = qty * stock.price;
+            if (cost > cash) {
+                alert('Insufficient cash! 💸');
+                return;
+            }
+            stock.owned += qty;
+            cash -= cost;
+            // Evaluate move: Buying when price > initial is a blunder
+            if (stock.price > stock.history[0]) {
+                blunders++;
+            } else {
+                goodMoves++;
+            }
+            updatePortfolio();
+            renderStocks();
+        }
+
+        // Sell Stock
+        function sellStock(name) {
+            const stock = stocks.find(s => s.name === name);
+            const qty = parseInt(document.getElementById(`sell-${name}`).value) || 0;
+            if (qty > stock.owned) {
+                alert('You don\'t own that many shares! 📉');
+                return;
+            }
+            stock.owned -= qty;
+            cash += qty * stock.price;
+            // Evaluate move: Selling when price > initial is a good move
+            if (stock.price > stock.history[0]) {
+                goodMoves++;
+            } else {
+                blunders++;
+            }
+            updatePortfolio();
+            renderStocks();
+        }
+
+        // Update Portfolio
+        function updatePortfolio() {
+            portfolioValue = cash + stocks.reduce((sum, stock) => sum + (stock.owned * stock.price), 0);
+            portfolioDiv.textContent = `Portfolio Value: ₹${portfolioValue.toFixed(2)} | Cash: ₹${cash.toFixed(2)}`;
+        }
+
+        // Next Day / Restart Logic
+        nextDayBtn.addEventListener('click', () => {
+            if (day >= 30) {
+                restartGame();
+            } else {
+                nextDay();
+            }
+        });
+
+        function nextDay() {
+            day++;
+            // Random price changes
+            stocks.forEach((stock) => {
+                const change = Math.floor(Math.random() * 11) - 5; // -5 to +5
+                stock.price = Math.max(1, stock.price + change); // Prevent negative prices
+                stock.history.push(stock.price);
+                // Flash row
+                const row = document.getElementById(`row-${stock.name}`);
+                row.classList.add('flash');
+                setTimeout(() => row.classList.remove('flash'), 500);
+            });
+
+            // Random event
+            triggerRandomEvent();
+
+            renderStocks();
+            updatePortfolio();
+            updateChart();
+
+            if (day >= 30) {
+                endGame();
+            }
+        }
+
+        // End Game Analysis
+        function endGame() {
+            nextDayBtn.textContent = "Restart";
+            newsDiv.innerHTML = `
+                <strong>Game Over!</strong><br>
+                You played for 30 days.<br>
+                Good Moves: ${goodMoves}<br>
+                Blunders: ${blunders}<br>
+                Final Portfolio Value: ₹${portfolioValue.toFixed(2)}<br>
+                ${portfolioValue > 10000 ? 'Great job! You made a profit!' : portfolioValue < 10000 ? 'Oops, you lost money. Better luck next time!' : 'You broke even!'}
+            `;
+        }
+
+        // Restart Game
+        function restartGame() {
+            cash = 10000;
+            portfolioValue = 10000;
+            day = 1;
+            goodMoves = 0;
+            blunders = 0;
+            stocks = JSON.parse(JSON.stringify(initialStocks)); // Reset stocks
+            nextDayBtn.textContent = "Next Day";
+            newsDiv.textContent = "Welcome to the stock market! Watch for news events that affect prices.";
+            renderStocks();
+            updatePortfolio();
+            initializeChart(); // Reinitialize chart with new data
+        }
+
+        // Random Events
+        const events = [
+            { message: "Tech Boom! All tech stocks +10%", affect: ['JAS-47', 'Finstagram', 'Infokix'], change: 10 },
+            { message: "Bank Crisis! CFDH Bank -15%", affect: ['CFDH Bank'], change: -15 },
+            { message: "Market Crash! All stocks -5%", affect: 'all', change: -5 },
+            { message: "Art Renaissance! Artix +20%", affect: ['Artix'], change: 20 },
+            { message: "Economic Growth! All stocks +3%", affect: 'all', change: 3 }
+        ];
+
+        function triggerRandomEvent() {
+            if (Math.random() < 0.3) { // 30% chance
+                const event = events[Math.floor(Math.random() * events.length)];
+                newsDiv.textContent = event.message;
+                stocks.forEach(stock => {
+                    if (event.affect === 'all' || event.affect.includes(stock.name)) {
+                        stock.price = Math.max(1, stock.price + (stock.price * event.change / 100));
+                        stock.history[stock.history.length - 1] = stock.price; // Update last history
+                    }
+                });
+            } else {
+                newsDiv.textContent = "No major news today. Prices fluctuated normally.";
+            }
+        }
+
+        // Chart.js Initialization
+        function initializeChart() {
+            if (chart) {
+                chart.destroy(); // Destroy existing chart
+            }
+            const ctx = document.getElementById('stock-chart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: stocks[0].history.length }, (_, i) => `Day ${i + 1}`),
+                    datasets: stocks.map(stock => ({
+                        label: stock.name,
+                        data: stock.history,
+                        borderColor: colorMap[stock.name],
+                        fill: false
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update Chart
+        function updateChart() {
+            chart.data.labels = Array.from({ length: stocks[0].history.length }, (_, i) => `Day ${i + 1}`);
+            chart.data.datasets.forEach(dataset => {
+                const stock = stocks.find(s => s.name === dataset.label);
+                dataset.data = stock.history;
+            });
+            chart.update();
+        }
+    </script>
+</body>
+</html>
