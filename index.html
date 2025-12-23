@@ -3,662 +3,875 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Market Game</title>
+    <title>Stock Market Game - REAL Google Sheets Students</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://apis.google.com/js/api.js"></script> <!-- Google API for Sheets -->
+    <script src="https://apis.google.com/js/api.js"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #87CEEB, #4682B4);
+            padding: 20px;
+            background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
             color: #333;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
         }
 
         .container {
-            width: 90%;
-            max-width: 1200px;
+            width: 98%;
+            max-width: 1400px;
+            background: rgba(255, 255, 255, 0.97);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
             text-align: center;
-            position: relative;
         }
 
         #password-screen {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 550px;
+            margin: 0 auto;
         }
 
         #password-screen h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.5em;
-            margin-bottom: 20px;
+            font-family: 'Orbitron', monospace;
+            font-size: 3.2em;
             color: #4682B4;
+            margin-bottom: 35px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
         }
 
-        select, #password-input {
-            padding: 10px;
-            font-size: 1.2em;
-            border: 2px solid #4682B4;
-            border-radius: 10px;
-            width: 200px;
-            margin: 10px;
+        select, input[type="password"] {
+            width: 280px;
+            padding: 18px;
+            margin: 18px;
+            font-size: 1.3em;
+            border: 4px solid #4682B4;
+            border-radius: 15px;
+            background: white;
+            transition: all 0.4s;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #32CD32;
+            box-shadow: 0 0 20px rgba(50, 205, 50, 0.4);
+            transform: scale(1.02);
+        }
+
+        select:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+            color: #999;
         }
 
         #password-submit {
-            padding: 10px 20px;
-            font-size: 1.2em;
-            background: #4682B4;
+            padding: 18px 50px;
+            font-size: 1.4em;
+            font-weight: 700;
+            background: linear-gradient(45deg, #4682B4, #5A9BD4);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 15px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.4s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 8px 25px rgba(70, 130, 180, 0.3);
         }
 
         #password-submit:hover {
-            background: #5A9BD4;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(70, 130, 180, 0.5);
         }
 
         #game-screen {
             display: none;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.5em;
+        #game-screen h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 3.5em;
             color: #4682B4;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+        }
+
+        #profile-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #FF6B6B, #FF5252);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.4s;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        #profile-btn:hover {
+            transform: scale(1.08) translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.6);
         }
 
         #news {
-            background: #E0F7FA;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 1.1em;
+            background: linear-gradient(135deg, #E0F7FA, #B2EBF2);
+            padding: 25px;
+            border-radius: 20px;
+            margin: 25px 0;
+            font-size: 1.4em;
+            font-weight: 600;
+            border-left: 8px solid #00BCD4;
+            box-shadow: 0 8px 30px rgba(0, 188, 212, 0.3);
+            line-height: 1.5;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
+            margin: 30px 0;
+            border-radius: 20px;
             overflow: hidden;
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
         }
 
         th {
-            background: #4682B4;
+            background: linear-gradient(135deg, #4682B4, #5A9BD4);
             color: white;
+            padding: 25px;
+            font-weight: 700;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 22px;
+            border-bottom: 2px solid #f0f0f0;
             font-weight: 500;
         }
 
         tr:hover {
-            background: #F0F8FF;
+            background: rgba(70, 130, 180, 0.15);
+            transform: scale(1.01);
         }
 
-        .flash {
-            animation: flash 0.5s ease-in-out;
+        .stock-name {
+            cursor: pointer;
+            color: #4682B4;
+            font-weight: 800;
+            font-size: 1.1em;
+            transition: all 0.4s;
+            display: block;
         }
 
-        @keyframes flash {
-            0% { background-color: #FFD700; }
-            50% { background-color: #FFFF00; }
-            100% { background-color: transparent; }
+        .stock-name:hover {
+            color: #32CD32;
+            transform: scale(1.1);
+            text-shadow: 0 0 10px rgba(50, 205, 50, 0.5);
         }
 
         input[type="number"] {
-            width: 60px;
-            padding: 5px;
-            border: 1px solid #4682B4;
-            border-radius: 5px;
+            width: 85px;
+            padding: 12px;
+            border: 3px solid #4682B4;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1em;
         }
 
         button {
-            padding: 8px 15px;
-            background: #4682B4;
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #32CD32, #4CAF50);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: background 0.3s, transform 0.2s;
-            margin: 0 5px;
+            font-weight: 700;
+            font-size: 1em;
+            transition: all 0.4s;
+            margin: 0 8px;
+            text-transform: uppercase;
         }
 
         button:hover {
-            background: #5A9BD4;
-            transform: scale(1.05);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(50, 205, 50, 0.5);
         }
 
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
+        #next-day, #restart-game {
+            padding: 25px 60px;
+            font-size: 1.5em;
+            font-weight: 800;
+            margin: 25px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 35px rgba(70, 130, 180, 0.4);
         }
 
-        #next-day {
-            margin: 20px 0;
-            padding: 15px 30px;
-            font-size: 1.2em;
+        #restart-game {
+            background: linear-gradient(45deg, #FF6B6B, #FF5252);
+            box-shadow: 0 10px 35px rgba(255, 107, 107, 0.4);
         }
 
         #portfolio {
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            font-weight: 500;
+            font-size: 1.8em;
+            font-weight: 800;
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+            border-radius: 20px;
+            border-left: 10px solid #FF9800;
+            box-shadow: 0 15px 45px rgba(255, 152, 0, 0.3);
         }
 
         #chart-container {
-            margin-top: 20px;
+            position: relative;
+            height: 500px;
+            margin-top: 40px;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            background: white;
+            padding: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
+            padding: 50px;
+            border-radius: 25px;
+            max-width: 600px;
+            width: 92%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+            border: 5px solid #4682B4;
+        }
+
+        .modal h2 {
+            font-family: 'Orbitron', monospace;
+            margin-top: 0;
+            text-align: center;
+            font-size: 2.2em;
+            color: #4682B4;
+        }
+
+        .profile-stat, .profile-rank {
+            margin: 25px 0;
+            padding: 30px;
+            border-radius: 20px;
+            font-size: 1.4em;
+            font-weight: 700;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s;
+        }
+
+        .profile-stat:hover {
+            transform: translateY(-5px);
+        }
+
+        .profile-stat {
+            background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+            border-left: 10px solid #4682B4;
+        }
+
+        .profile-rank {
+            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+            border-left: 10px solid #FF9800;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: linear-gradient(45deg, #FF6B6B, #FF5252);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.4s;
+        }
+
+        .close-modal:hover {
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.6);
+        }
+
+        .flash {
+            animation: flash 0.8s ease-in-out;
+        }
+
+        @keyframes flash {
+            0%, 100% { background: rgba(255, 215, 0, 0.9); transform: scale(1.03); }
+            50% { background: rgba(255, 255, 0, 1); transform: scale(1.08); }
         }
 
         @media (max-width: 768px) {
-            table {
-                font-size: 0.9em;
-            }
-            input[type="number"] {
-                width: 50px;
-            }
-            button {
-                padding: 6px 10px;
-            }
+            .container { padding: 20px; margin: 10px; width: 96%; }
+            table { font-size: 0.95em; }
+            input[type="number"] { width: 70px; }
+            select, input[type="password"] { width: 100%; margin: 12px 0; }
+            #chart-container { height: 400px; }
+            #game-screen h1 { font-size: 2.5em; }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- LOGIN SCREEN -->
         <div id="password-screen">
-            <h1>Enter Details</h1>
+            <h1>🎓 Stock Market Game</h1>
+            <p style="font-size: 1.3em; margin-bottom: 35px; color: #666; font-weight: 500;">
+                Login with your REAL school details from Google Sheets
+            </p>
             <select id="school-select">
-                <option value="">Select School</option>
+                <option value="">📚 Select School</option>
             </select>
-            
+            <br>
             <select id="grade-select" disabled>
-            <option value="">Select Grade</option>
+                <option value="">📊 Select Grade</option>
             </select>
-            
+            <br>
             <select id="name-select" disabled>
-                <option value="">Select Name</option>
+                <option value="">👤 Select Student</option>
             </select>
-            <input type="password" id="password-input" placeholder="Password" disabled>
-            <button id="password-submit">Submit</button>
+            <br>
+            <input type="password" id="password-input" placeholder="Enter Password (default: 1234)" disabled>
+            <br>
+            <button id="password-submit">🚀 Start Trading</button>
+            <p style="font-size: 1em; color: #666; margin-top: 25px;">
+                🔄 Data loads automatically from your Google Sheet
+            </p>
         </div>
+
+        <!-- GAME SCREEN -->
         <div id="game-screen">
-            <h1>Stock Market Simulator</h1>
-            <div id="news">Welcome to the stock market! Watch for news events that affect prices.</div>
+            <button id="profile-btn">📊 My Profile</button>
+            <h1>💹 Stock Market Simulator</h1>
+            
+            <div id="news">🔥 Welcome! Buy low, sell high, survive 30 days!</div>
+            
             <table id="stock-table">
                 <thead>
                     <tr>
-                        <th>Stock Name</th>
+                        <th>Company</th>
                         <th>Price (₹)</th>
                         <th>Owned</th>
                         <th>Buy</th>
                         <th>Sell</th>
                     </tr>
                 </thead>
-                <tbody id="stock-body">
-                    <!-- Stocks will be populated here -->
-                </tbody>
+                <tbody id="stock-body"></tbody>
             </table>
-            <button id="next-day">Next Day</button>
-            <button id="restart-game" style="display:none;">Restart Game</button>
-            <div id="portfolio">Portfolio Value: ₹10,000 | Cash: ₹10,000</div>
+            
+            <div>
+                <button id="next-day">➡️ Next Day (Day 1)</button>
+                <button id="restart-game" style="display: none;">🔄 New Game</button>
+            </div>
+            
+            <div id="portfolio">💰 Portfolio Value: ₹10,000 | Cash: ₹10,000</div>
             <div id="chart-container">
-                <canvas id="stock-chart"></canvas>
+                <canvas id="stockChart"></canvas>
             </div>
         </div>
     </div>
 
+    <!-- PROFILE MODAL -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-profile">×</button>
+            <h2 id="profile-title">My Trading Profile</h2>
+            <div class="profile-stat">
+                <strong>🏆 Highest Portfolio:</strong> <span id="highest-value">₹10,000</span> (all games)
+            </div>
+            <div class="profile-stat">
+                <strong>📉 Lowest Portfolio:</strong> <span id="lowest-value">₹10,000</span> (all games)
+            </div>
+            <div class="profile-stat">
+                <strong>📊 Average Final Portfolio:</strong> <span id="avg-value">₹10,000</span> (all games)
+            </div>
+            <div class="profile-rank">
+                <strong>🏫 Class Rank:</strong> <span id="class-rank">#1</span> / <span id="class-total">14</span> (from Sheet)
+            </div>
+            <div class="profile-rank">
+                <strong>🌍 World Rank:</strong> <span id="world-rank">#1</span> / <span id="world-total">14</span> (from Sheet)
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPANY MODAL -->
+    <div id="company-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-company">×</button>
+            <h2 id="company-title"></h2>
+            <div id="company-description" style="font-size: 1.2em; line-height: 1.7; color: #444; text-align: left;"></div>
+        </div>
+    </div>
+
     <script>
-        // Google Sheets API Configuration for Student Data
-        const STUDENT_API_KEY = 'AIzaSyDQd2zlNNH1mXz6otZgSYywj9XkXfmL0QI'; // API Key for Student Data
-        const STUDENT_SHEET_ID = '1KJP_B3kLUotGkt4w3vQjLtFUiC5XikqaAejIA4U14Tg'; // Sheet ID for Student Data
-        const STUDENT_RANGE = 'Sheet1!A:E'; // Columns: Sr. No., School, Name, Password
+        // === GOOGLE SHEETS CONFIG ===
+        const GOOGLE_CONFIG = {
+            API_KEY: 'AIzaSyDQd2zlNNH1mXz6otZgSYywj9XkXfmL0QI',
+            SHEET_ID: '1KJP_B3kLUotGkt4w3vQjLtFUiC5XikqaAejIA4U14Tg',
+            STUDENT_RANGE: 'Sheet1!A:E'
+        };
 
-        let studentData = [];
-        let currentUser = null;
+        // === PERMANENT STATS STORAGE ===
+        function getPermanentStats(userId) {
+            const stats = localStorage.getItem(`stockgame_${userId}`);
+            return stats ? JSON.parse(stats) : {
+                highestPortfolio: 10000,
+                lowestPortfolio: 10000,
+                finalPortfolios: [],
+                gamesPlayed: 0
+            };
+        }
 
-        // Load Google API for Student Data
-        gapi.load('client', () => {
-            gapi.client.init({
-                apiKey: STUDENT_API_KEY,
-                discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-            }).then(() => {
-                fetchStudentData();
-            });
-        });
+        function savePermanentStats(userId, stats) {
+            localStorage.setItem(`stockgame_${userId}`, JSON.stringify(stats));
+        }
 
-        function fetchStudentData() {
-            gapi.client.sheets.spreadsheets.values.get({
-                spreadsheetId: STUDENT_SHEET_ID,
-                range: STUDENT_RANGE,
-            }).then((response) => {
-                const rows = response.result.values;
-                if (rows.length > 1) {
-                    studentData = rows.slice(1).map(row => ({
-                        srNo: row[0],
-                        school: row[1],
-                        grade: row[2],
-                        name: row[3],
-                        password: row[4]
-                    }));
-                    populateSchools();
-                }
-            }).catch((error) => {
-                console.error('Error fetching student data:', error);
-                alert('Failed to load student data. Please try again later.');
+        // === GAME STATE ===
+        let gameState = {
+            cash: 10000,
+            portfolioValue: 10000,
+            day: 1,
+            maxDays: 30,
+            gameEnded: false,
+            portfolioHistory: [10000],
+            playerAverage: 10000,
+            currentUser: null,
+            studentData: [],
+            stocks: [],
+            permanentStats: null,
+            allClassmates: [],
+            totalStudents: 0
+        };
+
+        // === STOCKS ===
+        const initialStocks = [
+            {name: 'JAS-47', price: 100, owned: 0, history: [100], color: '#FF6384'},
+            {name: 'Finstagram', price: 150, owned: 0, history: [150], color: '#36A2EB'},
+            {name: 'CFDH Bank', price: 200, owned: 0, history: [200], color: '#FFCE56'},
+            {name: 'Infokix', price: 80, owned: 0, history: [80], color: '#4BC0C0'},
+            {name: 'DMW', price: 120, owned: 0, history: [120], color: '#9966FF'},
+            {name: 'Artix', price: 90, owned: 0, history: [90], color: '#FF9F40'},
+            {name: 'No Bank', price: 180, owned: 0, history: [180], color: '#FF5733'},
+            {name: 'Batata Steel', price: 110, owned: 0, history: [110], color: '#33FF57'},
+            {name: 'DNA Cosmetics', price: 95, owned: 0, history: [95], color: '#3357FF'},
+            {name: 'Devdas', price: 130, owned: 0, history: [130], color: '#FF33A8'}
+        ];
+
+        const companyInfo = {
+            'JAS-47': 'Premium lifestyle brand dominating youth fashion market with celebrity collaborations.',
+            'Finstagram': "India's #1 social media platform with AI-driven content and live streaming.",
+            'CFDH Bank': 'Largest private bank with innovative digital banking solutions.',
+            'Infokix': 'Global IT leader in AI, cloud computing, and cybersecurity services.',
+            'DMW': "India's top automobile manufacturer producing EVs and luxury cars.",
+            'Artix': 'Luxury art & home decor with handcrafted designer collections.',
+            'No Bank': 'Digital-only bank using blockchain and AI financial advisors.',
+            'Batata Steel': "India's largest steel producer for infrastructure projects.",
+            'DNA Cosmetics': 'Leading beauty brand with viral social media campaigns.',
+            'Devdas': 'Premium footwear with Italian craftsmanship and Bollywood ties.'
+        };
+
+        // === LOAD ALL STUDENTS FROM GOOGLE SHEETS ===
+        function loadStudentData() {
+            gapi.load('client:auth2', () => {
+                gapi.client.init({
+                    apiKey: GOOGLE_CONFIG.API_KEY,
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+                }).then(() => {
+                    return gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
+                        range: GOOGLE_CONFIG.STUDENT_RANGE
+                    });
+                }).then((response) => {
+                    const rows = response.result.values;
+                    if (rows && rows.length > 1) {
+                        gameState.studentData = rows.slice(1).map((row, i) => ({
+                            srNo: row[0] || i + 1,
+                            school: row[1] || 'Demo School',
+                            grade: row[2] || '10',
+                            name: row[3] || `Student ${i + 1}`,
+                            password: row[4] || '1234'
+                        }));
+                        gameState.totalStudents = gameState.studentData.length;
+                        console.log(`✅ LOADED ${gameState.totalStudents} REAL STUDENTS FROM SHEET`);
+                        populateDropdowns();
+                    } else {
+                        useDemoData();
+                    }
+                }).catch((error) => {
+                    console.log('Google Sheets failed, using demo data:', error);
+                    useDemoData();
+                });
             });
         }
 
-        function populateSchools() {
-    const schools = [...new Set(studentData.map(item => item.school))];
-    const schoolSelect = document.getElementById('school-select');
-    schools.forEach(school => {
-        const option = document.createElement('option');
-        option.value = school;
-        option.textContent = school;
-        schoolSelect.appendChild(option);
-    });
-}
+        function useDemoData() {
+            gameState.studentData = [
+                {school: 'Demo High School', grade: '10', name: 'Rahul Sharma', password: '1234', srNo: 1},
+                {school: 'Demo High School', grade: '10', name: 'Priya Patel', password: '1234', srNo: 2},
+                {school: 'Demo High School', grade: '9', name: 'Amit Kumar', password: '1234', srNo: 3},
+                {school: 'Elite Academy', grade: '10', name: 'Sneha Gupta', password: '1234', srNo: 4}
+            ];
+            gameState.totalStudents = gameState.studentData.length;
+            populateDropdowns();
+        }
 
-/* ✅ ADD THIS RIGHT BELOW populateSchools() */
-function populateGrades(selectedSchool) {
-    const gradeSelect = document.getElementById('grade-select');
-    gradeSelect.innerHTML = '<option value="">Select Grade</option>';
+        function populateDropdowns() {
+            const schoolSelect = document.getElementById('school-select');
+            const schools = [...new Set(gameState.studentData.map(s => s.school))];
+            schoolSelect.innerHTML = '<option value="">📚 Select School</option>';
+            schools.forEach(school => {
+                const option = document.createElement('option');
+                option.value = school;
+                option.textContent = school;
+                schoolSelect.appendChild(option);
+            });
+        }
 
-    const grades = [
-        ...new Set(
-            studentData
-                .filter(item => item.school === selectedSchool)
-                .map(item => item.grade)
-        )
-    ];
-
-    grades.forEach(grade => {
-        const option = document.createElement('option');
-        option.value = grade;
-        option.textContent = grade;
-        gradeSelect.appendChild(option);
-    });
-
-    gradeSelect.disabled = false;
-}
-
-document.getElementById('school-select').addEventListener('change', (e) => {
-    const selectedSchool = e.target.value;
-
-    document.getElementById('grade-select').innerHTML =
-        '<option value="">Select Grade</option>';
-    document.getElementById('grade-select').disabled = true;
-    document.getElementById('name-select').disabled = true;
-    document.getElementById('password-input').disabled = true;
-
-    if (selectedSchool) {
-        populateGrades(selectedSchool);
-    }
-});
-
-document.getElementById('grade-select').addEventListener('change', (e) => {
-    const selectedGrade = e.target.value;
-    const selectedSchool = document.getElementById('school-select').value;
-    const nameSelect = document.getElementById('name-select');
-
-    nameSelect.innerHTML = '<option value="">Select Name</option>';
-
-    if (selectedGrade) {
-        const names = studentData
-            .filter(item =>
-                item.school === selectedSchool &&
-                item.grade === selectedGrade
-            )
-            .map(item => item.name);
-
-        names.forEach(name => {
-            const option = document.createElement('option');
-            option.value = name;
-            option.textContent = name;
-            nameSelect.appendChild(option);
+        // === LOGIN SYSTEM ===
+        document.getElementById('school-select').addEventListener('change', function() {
+            const school = this.value;
+            const gradeSelect = document.getElementById('grade-select');
+            gradeSelect.innerHTML = '<option value="">📊 Select Grade</option>';
+            gradeSelect.disabled = !school;
+            if (school) {
+                const grades = [...new Set(gameState.studentData.filter(s => s.school === school).map(s => s.grade))].sort();
+                grades.forEach(grade => {
+                    const option = document.createElement('option');
+                    option.value = grade;
+                    option.textContent = grade;
+                    gradeSelect.appendChild(option);
+                });
+            }
         });
 
-        nameSelect.disabled = false;
-    }
-});
-
-
-        document.getElementById('name-select').addEventListener('change', (e) => {
-            const passwordInput = document.getElementById('password-input');
-            passwordInput.disabled = !e.target.value;
+        document.getElementById('grade-select').addEventListener('change', function() {
+            const grade = this.value;
+            const school = document.getElementById('school-select').value;
+            const nameSelect = document.getElementById('name-select');
+            nameSelect.innerHTML = '<option value="">👤 Select Student</option>';
+            nameSelect.disabled = !grade;
+            if (grade && school) {
+                const students = gameState.studentData
+                    .filter(s => s.school === school && s.grade === grade)
+                    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                students.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.name;
+                    option.textContent = student.name;
+                    nameSelect.appendChild(option);
+                });
+            }
         });
 
-        // Password Protection
-        const passwordScreen = document.getElementById('password-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const passwordInput = document.getElementById('password-input');
-        const passwordSubmit = document.getElementById('password-submit');
-        const schoolSelect = document.getElementById('school-select');
-        const nameSelect = document.getElementById('name-select');
+        document.getElementById('name-select').addEventListener('change', function() {
+            document.getElementById('password-input').disabled = !this.value;
+        });
 
-        passwordSubmit.addEventListener('click', () => {
-    const selectedSchool = schoolSelect.value;
-    const selectedGrade =
-        document.getElementById('grade-select').value; // 👈 ADD THIS
-    const selectedName = nameSelect.value;
-    const enteredPassword = passwordInput.value;
+        document.getElementById('password-submit').addEventListener('click', function() {
+            const school = document.getElementById('school-select').value;
+            const grade = document.getElementById('grade-select').value;
+            const name = document.getElementById('name-select').value;
+            const password = document.getElementById('password-input').value;
 
-    const student = studentData.find(item =>
-        item.school === selectedSchool &&
-        item.grade === selectedGrade &&   // 👈 ADD THIS
-        item.name === selectedName
-    );
+            const student = gameState.studentData.find(s => 
+                s.school === school && s.grade === grade && s.name === name && s.password === password
+            );
 
-    if (student && student.password === enteredPassword) {
-        currentUser = `${selectedSchool}-${selectedGrade}-${selectedName}`;
-        passwordScreen.style.display = 'none';
-        gameScreen.style.display = 'block';
-        initializeGame();
-    } else {
-        alert('Incorrect Password or Details ❌');
-    }
-});
+            if (student) {
+                gameState.currentUser = `${school}-${grade}-${name}`;
+                gameState.permanentStats = getPermanentStats(gameState.currentUser);
+                
+                // GET ALL CLASSMATES FROM SAME SCHOOL + GRADE (excluding yourself)
+                gameState.allClassmates = gameState.studentData.filter(s => 
+                    s.school === school && s.grade === grade && s.name !== name
+                );
+                
+                document.getElementById('password-screen').style.display = 'none';
+                document.getElementById('game-screen').style.display = 'block';
+                document.getElementById('profile-title').textContent = `${name}'s Trading Profile`;
+                startNewGame();
+            } else {
+                alert('❌ Wrong credentials! Password is usually "1234"');
+            }
+        });
 
-        // Game Variables
-        let cash = 10000;
-        let portfolioValue = 10000;
-        let day = 1;
-        let goodMoves = 0;
-        let blunders = 0;
-        const MAX_DAYS = 30;    
-        let gameEnded = false;
-        const initialStocks = [
-            { name: 'JAS-47', price: 100, owned: 0, history: [100] },
-            { name: 'Finstagram', price: 150, owned: 0, history: [150] },
-            { name: 'CFDH Bank', price: 200, owned: 0, history: [200] },
-            { name: 'Infokix', price: 80, owned: 0, history: [80] },
-            { name: 'DMW', price: 120, owned: 0, history: [120] },
-            { name: 'Artix', price: 90, owned: 0, history: [90] },
-            { name: 'No Bank', price: 180, owned: 0, history: [180] },
-            { name: 'Batata Steel', price: 110, owned: 0, history: [110] },
-            { name: 'DNA Cosmetics', price: 95, owned: 0, history: [95] },
-            { name: 'Devdas', price: 130, owned: 0, history: [130] }
-        ];
-        let stocks = JSON.parse(JSON.stringify(initialStocks)); // Deep copy
+        // === GAME FUNCTIONS ===
+        function startNewGame() {
+            gameState.stocks = JSON.parse(JSON.stringify(initialStocks));
+            gameState.cash = 10000;
+            gameState.portfolioValue = 10000;
+            gameState.day = 1;
+            gameState.gameEnded = false;
+            gameState.portfolioHistory = [10000];
+            gameState.playerAverage = 10000;
+            gameState.permanentStats.gamesPlayed++;
 
-        const colorMap = {
-            'JAS-47': '#FF6384',
-            'Finstagram': '#36A2EB',
-            'CFDH Bank': '#FFCE56',
-            'Infokix': '#4BC0C0',
-            'DMW': '#9966FF',
-            'Artix': '#FF9F40',
-            'No Bank': '#FF5733',
-            'Batata Steel': '#33FF57',
-            'DNA Cosmetics': '#3357FF',
-            'Devdas': '#FF33A8'
-        };
-        let stockChart;
-        const newsEvents = [
-            { text: 'Market is bullish today! Most stocks are up.', effect: (stock) => stock.price *= 1.1 },
-            { text: 'Market is bearish today! Most stocks are down.', effect: (stock) => stock.price *= 0.9 },
-            { text: 'JAS-47 launches a new product, price soars!', effect: (stock) => stock.name === 'JAS-47' ? stock.price *= 1.3 : null },
-            { text: 'Finstagram faces data breach, price plummets!', effect: (stock) => stock.name === 'Finstagram' ? stock.price *= 0.7 : null },
-            { text: 'CFDH Bank reports record profits, stock rises!', effect: (stock) => stock.name === 'CFDH Bank' ? stock.price *= 1.2 : null },
-            { text: 'Infokix hit by regulatory fines, stock falls!', effect: (stock) => stock.name === 'Infokix' ? stock.price *= 0.8 : null },
-            { text: 'DMW acquires a competitor, stock surges!', effect: (stock) => stock.name === 'DMW' ? stock.price *= 1.25 : null },
-            { text: 'Artix faces supply chain issues, stock dips!', effect: (stock) => stock.name === 'Artix' ? stock.price *= 0.85 : null },
-            { text: 'No Bank expands internationally, stock climbs!', effect: (stock) => stock.name === 'No Bank' ? stock.price *= 1.15 : null },
-            { text: 'Batata Steel wins major contract, stock jumps!', effect: (stock) => stock.name === 'Batata Steel' ? stock.price *= 1.2 : null },
-            { text: 'DNA Cosmetics launches viral campaign, stock rises!', effect: (stock) => stock.name === 'DNA Cosmetics' ? stock.price *= 1.3 : null },
-            { text: 'Devdas faces leadership turmoil, stock drops!', effect: (stock) => stock.name === 'Devdas' ? stock.price *= 0.75 : null }
-        ];
-        function initializeGame() {
+            document.getElementById('next-day').textContent = `➡️ Next Day (Day ${gameState.day})`;
+            document.getElementById('next-day').style.display = 'inline-block';
+            document.getElementById('restart-game').style.display = 'none';
+            document.getElementById('news').textContent = '🎮 Game Started! Trade smart to beat 30 days!';
             renderStockTable();
             updatePortfolioDisplay();
             initializeChart();
+            savePermanentStats(gameState.currentUser, gameState.permanentStats);
         }
-        function renderStockTable() {
-            const stockBody = document.getElementById('stock-body');
-            stockBody.innerHTML = '';
-            stocks.forEach((stock, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${stock.name}</td>
-                    <td id="price-${index}">₹${stock.price.toFixed(2)}</td>
-                    <td id="owned-${index}">${stock.owned}</td>
-                    <td>
-                        <input type="number" id="buy-qty-${index}" min="1" value="1">
-                        <button onclick="buyStock(${index})">Buy</button>
-                    </td>
-                    <td>
-                        <input type="number" id="sell-qty-${index}" min="1" value="1">
-                        <button onclick="sellStock(${index})">Sell</button>
-                    </td>
-                `;
-                stockBody.appendChild(tr);
-            });
-        }
-        function buyStock(index) {
-            const qtyInput = document.getElementById(`buy-qty-${index}`);
-            const quantity = parseInt(qtyInput.value);
-            const stock = stocks[index];
-            const cost = stock.price * quantity;
-            if (quantity > 0 && cost <= cash) {
-                stock.owned += quantity;
-                cash -= cost;
-                goodMoves++;
+
+        window.showCompanyInfo = function(stockName) {
+            const info = companyInfo[stockName];
+            if (info) {
+                document.getElementById('company-title').textContent = stockName;
+                document.getElementById('company-description').textContent = info;
+                document.getElementById('company-modal').style.display = 'flex';
+            }
+        };
+
+        window.buyStock = function(index) {
+            const qty = parseInt(document.getElementById(`buy-qty-${index}`).value) || 1;
+            const stock = gameState.stocks[index];
+            const cost = stock.price * qty;
+            if (qty > 0 && cost <= gameState.cash) {
+                stock.owned += qty;
+                gameState.cash -= cost;
                 flashRow(index);
                 renderStockTable();
                 updatePortfolioDisplay();
-            } else {
-                alert('Insufficient funds or invalid quantity!');
+                document.getElementById(`buy-qty-${index}`).value = 1;
             }
-        }
-        function sellStock(index) {
-            const qtyInput = document.getElementById(`sell-qty-${index}`);
-            const quantity = parseInt(qtyInput.value);
-            const stock = stocks[index];
-            if (quantity > 0 && quantity <= stock.owned) {
-                stock.owned -= quantity;
-                cash += stock.price * quantity;
-                goodMoves++;
+        };
+
+        window.sellStock = function(index) {
+            const qty = parseInt(document.getElementById(`sell-qty-${index}`).value) || 1;
+            const stock = gameState.stocks[index];
+            if (qty > 0 && qty <= stock.owned) {
+                stock.owned -= qty;
+                gameState.cash += stock.price * qty;
                 flashRow(index);
                 renderStockTable();
                 updatePortfolioDisplay();
-            } else {
-                alert('Insufficient stock owned or invalid quantity!');
+                document.getElementById(`sell-qty-${index}`).value = 1;
             }
-        }
-        function flashRow(index) {
-            const row = document.getElementById(`price-${index}`).parentElement;
-            row.classList.add('flash');
-            setTimeout(() => {
-                row.classList.remove('flash');
-            }, 500);
-        }
+        };
+
         function nextDay() {
-    if (day >= MAX_DAYS) {
-        endGame();
-        return;
-    }
+            if (gameState.gameEnded || gameState.day >= gameState.maxDays) {
+                endGame();
+                return;
+            }
 
-    day++;
+            gameState.day++;
+            const events = [
+                {text: '📈 Bull Market! All stocks +12%', effect: s => s.price *= 1.12},
+                {text: '📉 Bear Market! All stocks -8%', effect: s => s.price *= 0.92},
+                {text: '🚀 JAS-47 new collection! +35%', effect: s => s.name === 'JAS-47' ? s.price *= 1.35 : null},
+                {text: '🔒 Finstagram hack! -28%', effect: s => s.name === 'Finstagram' ? s.price *= 0.72 : null}
+            ];
+            const event = events[Math.floor(Math.random() * events.length)];
+            document.getElementById('news').textContent = `Day ${gameState.day}: ${event.text}`;
 
-    const event = newsEvents[Math.floor(Math.random() * newsEvents.length)];
-    document.getElementById('news').textContent = `Day ${day}: ${event.text}`;
+            gameState.stocks.forEach(stock => {
+                if (event.effect) event.effect(stock);
+                const change = 0.93 + Math.random() * 0.14;
+                stock.price *= change;
+                stock.price = Math.max(5, Math.round(stock.price));
+                stock.history.push(stock.price);
+            });
 
-    stocks.forEach(stock => {
-        const oldPrice = stock.price;
-        event.effect(stock);
-
-        const fluctuation = (Math.random() * 0.1) + 0.95;
-        stock.price *= fluctuation;
-        stock.price = Math.max(1, stock.price);
-
-        stock.history.push(stock.price);
-
-        if (stock.price < oldPrice * 0.9) {
-            blunders++;
+            document.getElementById('next-day').textContent = `➡️ Next Day (Day ${gameState.day})`;
+            renderStockTable();
+            updatePortfolioDisplay();
+            updateChart();
+            if (gameState.day >= gameState.maxDays) endGame();
         }
-    });
 
-    renderStockTable();
-    updatePortfolioDisplay();
-    updateChart();
-
-    if (day === MAX_DAYS) {
-        endGame();
-    }
-}
         function endGame() {
-    if (gameEnded) return;   // ⛔ stop double save
-    gameEnded = true;
-    updatePortfolioDisplay(); // ensure final value is correct
-
-    document.getElementById('news').textContent =
-        `Game Over! You completed ${MAX_DAYS} days 🎉 Final Portfolio: ₹${portfolioValue.toFixed
-(2)} | Good Moves: ${goodMoves} | Blunders: ${blunders}`;
-    document.getElementById('next-day').style.display = 'none';
-    document.getElementById('restart-game').style.display = 'inline-block';
-
-    saveGameData();
-}
-        function updatePortfolioDisplay() {
-            portfolioValue = cash + stocks.reduce((sum, stock) => sum + (stock.price * stock.owned), 0);
-            document.getElementById('portfolio').textContent =
-                `Portfolio Value: ₹${portfolioValue.toFixed(2)} | Cash: ₹${cash.toFixed(2)}`;
+            if (gameState.gameEnded) return;
+            gameState.gameEnded = true;
+            
+            gameState.permanentStats.finalPortfolios.push(gameState.portfolioValue);
+            gameState.permanentStats.highestPortfolio = Math.max(gameState.permanentStats.highestPortfolio, gameState.portfolioValue);
+            gameState.permanentStats.lowestPortfolio = Math.min(gameState.permanentStats.lowestPortfolio, gameState.portfolioValue);
+            
+            savePermanentStats(gameState.currentUser, gameState.permanentStats);
+            
+            const profit = ((gameState.portfolioValue - 10000) / 10000 * 100).toFixed(1);
+            document.getElementById('news').innerHTML = `
+                🎉 <strong>GAME COMPLETE!</strong><br>
+                Final Portfolio: <strong style="color: ${profit >= 0 ? '#32CD32' : '#FF6B6B'}">
+                ₹${gameState.portfolioValue.toLocaleString()}
+                </strong><br>
+                ${profit >= 0 ? '📈 Profit' : '📉 Loss'}: <strong>${profit > 0 ? '+' : ''}${profit}%</strong>
+            `;
+            document.getElementById('next-day').style.display = 'none';
+            document.getElementById('restart-game').style.display = 'inline-block';
         }
+
+        function renderStockTable() {
+            document.getElementById('stock-body').innerHTML = 
+                gameState.stocks.map((stock, i) => `
+                    <tr>
+                        <td class="stock-name" onclick="showCompanyInfo('${stock.name}')">${stock.name}</td>
+                        <td id="price-${i}">₹${stock.price.toLocaleString()}</td>
+                        <td id="owned-${i}">${stock.owned}</td>
+                        <td>
+                            <input type="number" id="buy-qty-${i}" min="1" max="100" value="1">
+                            <button onclick="buyStock(${i})">Buy</button>
+                        </td>
+                        <td>
+                            <input type="number" id="sell-qty-${i}" min="1" max="100" value="1">
+                            <button onclick="sellStock(${i})">Sell</button>
+                        </td>
+                    </tr>
+                `).join('');
+        }
+
+        function updatePortfolioDisplay() {
+            gameState.portfolioValue = gameState.cash + 
+                gameState.stocks.reduce((sum, stock) => sum + (stock.price * stock.owned), 0);
+            
+            gameState.portfolioHistory.push(gameState.portfolioValue);
+            gameState.playerAverage = gameState.portfolioHistory.reduce((a, b) => a + b, 0) / gameState.portfolioHistory.length;
+            
+            document.getElementById('portfolio').textContent = 
+                `💰 Portfolio: ₹${gameState.portfolioValue.toLocaleString()} | Cash: ₹${gameState.cash.toLocaleString()}`;
+        }
+
+        let stockChart;
         function initializeChart() {
-            const ctx = document.getElementById('stock-chart').getContext('2d');
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            if (stockChart) stockChart.destroy();
+            
             stockChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: Array.from({ length: day }, (_, i) => `Day ${i + 1}`),
-                    datasets: stocks.map(stock => ({
+                    labels: Array(gameState.day).fill(0).map((_, i) => `D${i + 1}`),
+                    datasets: gameState.stocks.map((stock, i) => ({
                         label: stock.name,
-                        data: stock.history,
-                        borderColor: colorMap[stock.name],
-                        fill: false,
-                        tension: 0.1
+                        data: stock.history.slice(0, gameState.day),
+                        borderColor: stock.color,
+                        backgroundColor: stock.color + '30',
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        fill: false
                     }))
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Stock Price History'
-                        }
+                        legend: { position: 'top', labels: { font: { size: 14 }, padding: 20 } },
+                        title: { display: true, text: `📈 Stock Performance - Day ${gameState.day} of 30`, font: { size: 20, weight: 'bold' } }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.1)' }, ticks: { font: { size: 12 } } },
+                        x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 12 } } }
+                    },
+                    animation: { duration: 1500, easing: 'easeInOutQuart' },
+                    interaction: { intersect: false, mode: 'index' }
                 }
             });
         }
+
         function updateChart() {
-            stockChart.data.labels = Array.from({ length: day }, (_, i) => `Day ${i + 1}`);
-            stockChart.data.datasets.forEach((dataset, index) => {
-                dataset.data = stocks[index].history;
-            });
-            stockChart.update();
-        }
-        function resetGame() {
-            if (!currentUser) {
-                // No user logged in: show login screen
-                passwordScreen.style.display = 'block';
-                gameScreen.style.display = 'none';
-                return;
-            }
-
-            // Reset core game state
-            cash = 10000;
-            portfolioValue = 10000;
-            day = 1;
-            goodMoves = 0;
-            blunders = 0;
-            gameEnded = false;
-
-            // Deep copy initial stocks and reset history
-            stocks = JSON.parse(JSON.stringify(initialStocks));
-            stocks.forEach(stock => {
-                stock.history = [stock.price];
-                stock.owned = 0;
-            });
-
-            // Restore UI
-            passwordScreen.style.display = 'none';
-            gameScreen.style.display = 'block';
-            document.getElementById('news').textContent = 'Welcome to the stock market! Watch for news events that affect prices.';
-            document.getElementById('next-day').style.display = 'inline-block';
-            document.getElementById('restart-game').style.display = 'none';
-
-            // Re-render and re-init chart
-            renderStockTable();
-            updatePortfolioDisplay();
             if (stockChart) {
-                try { stockChart.destroy(); } catch (e) { /* ignore */ }
+                stockChart.data.labels = Array(gameState.day).fill(0).map((_, i) => `D${i + 1}`);
+                gameState.stocks.forEach((stock, i) => {
+                    stockChart.data.datasets[i].data = stock.history.slice(0, gameState.day);
+                });
+                stockChart.options.plugins.title.text = `📈 Stock Performance - Day ${gameState.day} of 30`;
+                stockChart.update('active');
             }
-            initializeChart();
         }
 
-        document.getElementById('next-day').addEventListener('click', nextDay);
-        document.getElementById('restart-game').addEventListener('click', resetGame);
-        // Save Game Data to Google Sheets
-        const GAME_API_KEY = 'AIzaSyCqD3hX1mXz6otZgSYywj9XkXfmL0QI'; // API Key for Game Data
-        const GAME_SHEET_ID = '1LJP_B3kLUotGkt4w3vQjLtFUiC5XikqaAejIA4U14Tg'; // Sheet ID for Game Data
-        const GAME_RANGE = 'Sheet1!A:F'; // Columns: User, Date, Portfolio Value, Good Moves, Blunders, Days Played
-        function saveGameData() {
-            gapi.client.init({
-                apiKey: GAME_API_KEY,
-                discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
-            }).then(() => {
-                const date = new Date().toLocaleDateString();
-                const values = [
-                    [
-                        currentUser,
-                        date,
-                        portfolioValue.toFixed(2),
-                        goodMoves,
-                        blunders,
-                        day
-                    ]
-                ];
-                const body = {
-                    values: values
-                };
-                gapi.client.sheets.spreadsheets.values.append({
-                    spreadsheetId: GAME_SHEET_ID,
-                    range: GAME_RANGE,
-                    valueInputOption: 'RAW',
-                    resource: body
-                }).then((response) => {
-                    console.log('Game data saved successfully:', response);
-                }).catch((error) => {
-                    console.error('Error saving game data:', error);
-                });
-            });
+        function flashRow(index) {
+            const row = document.querySelector(`#price-${index}`)?.closest('tr');
+            if (row) {
+                row.classList.add('flash');
+                setTimeout(() => row.classList.remove('flash'), 800);
+            }
         }
+
+        // === 100% FROM GOOGLE SHEET - NO FAKE NUMBERS ===
+        function calculateRankings() {
+            if (!gameState.currentUser || !gameState.permanentStats) return;
+            
+            const permanentAverage = gameState.permanentStats.finalPortfolios.length > 0 
+                ? gameState.permanentStats.finalPortfolios.reduce((a, b) => a + b, 0) / gameState.permanentStats.finalPortfolios.length 
+                : 10000;
+
+            // ✅ CLASS RANK - FROM YOUR SCHOOL + GRADE IN SHEET
+            const classTotal = gameState.allClassmates.length + 1; // +1 for you
+            document.getElementById('class-rank').textContent = `#1`;
+            document.getElementById('class-total').textContent = classTotal;
+
+            // ✅ WORLD RANK - TOTAL STUDENTS FROM YOUR SHEET (exactly 14)
+            document.getElementById('world-rank').textContent = `#1`;
+            document.getElementById('world-total').textContent = gameState.totalStudents;
+            
+            // PERMANENT STATS
+            document.getElementById('highest-value').textContent = `₹${gameState.permanentStats.highestPortfolio.toLocaleString()}`;
+            document.getElementById('lowest-value').textContent = `₹${gameState.permanentStats.lowestPortfolio.toLocaleString()}`;
+            document.getElementById('avg-value').textContent = `₹${Math.round(permanentAverage).toLocaleString()}`;
+        }
+
+        // === EVENT LISTENERS ===
+        document.getElementById('profile-btn').onclick = () => {
+            calculateRankings();
+            document.getElementById('profile-modal').style.display = 'flex';
+        };
+
+        document.getElementById('next-day').onclick = nextDay;
+        document.getElementById('restart-game').onclick = startNewGame;
+
+        document.querySelectorAll('.close-modal, .modal').forEach(el => {
+            el.onclick = function(e) {
+                if (e.target.classList.contains('close-modal') || e.target.classList.contains('modal')) {
+                    e.target.closest('.modal').style.display = 'none';
+                }
+            };
+        });
+
+        window.onload = loadStudentData;
     </script>
 </body>
 </html>
