@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Market Game</title>
+    <title>Stock Market Game - REAL Google Sheets Students</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -356,21 +356,21 @@
         <div id="password-screen">
             <h1>🎓 Stock Market Game</h1>
             <p style="font-size: 1.3em; margin-bottom: 35px; color: #666; font-weight: 500;">
-                If you dont have an account, fill <a href="https://forms.gle/K6f9hTMKwKRViWkN7" target="_blank">this</a> form.
+                If you don't have an account, Fill <a href="https://www.google.com" target="_blank">this</a> form.
             </p>
             <select id="school-select">
-                <option value="">Select School  📚</option>
+                <option value="">Select School</option>
             </select>
             <br>
             <select id="grade-select" disabled>
-                <option value="">Select Grade  📊</option>
+                <option value="">Select Grade</option>
             </select>
             <br>
             <select id="name-select" disabled>
-                <option value="">Select Student  👤</option>
+                <option value="">Select Student</option>
             </select>
             <br>
-            <input type="password" id="password-input" placeholder="Enter Password" disabled>
+            <input type="password" id="password-input" placeholder="Enter Password (default: 1234)" disabled>
             <br>
             <button id="password-submit">🚀 Start Trading</button>
             <p style="font-size: 1em; color: #666; margin-top: 25px;">
@@ -698,12 +698,88 @@
             }
 
             gameState.day++;
-            const events = [
-                {text: '📈 Bull Market! All stocks +12%', effect: s => s.price *= 1.12},
-                {text: '📉 Bear Market! All stocks -8%', effect: s => s.price *= 0.92},
-                {text: '🚀 JAS-47 new collection! +35%', effect: s => s.name === 'JAS-47' ? s.price *= 1.35 : null},
-                {text: '🔒 Finstagram hack! -28%', effect: s => s.name === 'Finstagram' ? s.price *= 0.72 : null}
-            ];
+
+const events = [
+    // 🌍 Market-wide events
+    { text: '📈 Bull Market! All stocks +12%', effect: s => s.price *= 1.12 },
+    { text: '📉 Bear Market! All stocks -8%', effect: s => s.price *= 0.92 },
+    { text: '💸 Inflation fears hit markets! -10%', effect: s => s.price *= 0.90 },
+    { text: '🏆 Strong economic data released! +15%', effect: s => s.price *= 1.15 },
+
+    // 👕 JAS-47
+    { text: '🌟 Celebrity endorses JAS-47! +30%', effect: s => s.name === 'JAS-47' ? s.price *= 1.30 : null },
+    { text: '👕 Fashion trend fades for JAS-47! -18%', effect: s => s.name === 'JAS-47' ? s.price *= 0.82 : null },
+
+    // 📱 Finstagram
+    { text: '📱 New AI reel algorithm boosts Finstagram! +25%', effect: s => s.name === 'Finstagram' ? s.price *= 1.25 : null },
+    { text: '🔒 Finstagram data privacy issue! -22%', effect: s => s.name === 'Finstagram' ? s.price *= 0.78 : null },
+
+    // 🏦 CFDH Bank
+    { text: '🏦 CFDH Bank reports record profits! +20%', effect: s => s.name === 'CFDH Bank' ? s.price *= 1.20 : null },
+    { text: '📉 Rising NPAs worry investors! -15%', effect: s => s.name === 'CFDH Bank' ? s.price *= 0.85 : null },
+
+    // 🤖 Infokix
+    { text: '🤖 Infokix signs global AI deal! +28%', effect: s => s.name === 'Infokix' ? s.price *= 1.28 : null },
+    { text: '⚠️ Cyber attack impacts Infokix clients! -20%', effect: s => s.name === 'Infokix' ? s.price *= 0.80 : null },
+
+    // ⚡ DMW
+    { text: '⚡ DMW launches affordable EV! +32%', effect: s => s.name === 'DMW' ? s.price *= 1.32 : null },
+    { text: '🚗 EV subsidy cut hurts DMW! -18%', effect: s => s.name === 'DMW' ? s.price *= 0.82 : null },
+
+    // 🎨 Artix
+    { text: '🖼️ Artix collection goes viral globally! +26%', effect: s => s.name === 'Artix' ? s.price *= 1.26 : null },
+    { text: '📦 Supply delays at Artix! -14%', effect: s => s.name === 'Artix' ? s.price *= 0.86 : null },
+
+    // 🔗 No Bank
+    { text: '🔗 No Bank launches AI financial advisor! +35%', effect: s => s.name === 'No Bank' ? s.price *= 1.35 : null },
+    { text: '📜 Regulatory pressure on No Bank! -25%', effect: s => s.name === 'No Bank' ? s.price *= 0.75 : null },
+
+    // 🏗️ Batata Steel
+    { text: '🏗️ Mega infrastructure project announced! +22%', effect: s => s.name === 'Batata Steel' ? s.price *= 1.22 : null },
+    { text: '🌍 Global steel prices fall! -16%', effect: s => s.name === 'Batata Steel' ? s.price *= 0.84 : null },
+
+    // 💄 DNA Cosmetics
+    { text: '💄 DNA Cosmetics trends on social media! +27%', effect: s => s.name === 'DNA Cosmetics' ? s.price *= 1.27 : null },
+    { text: '🧪 Quality issue reported at DNA! -19%', effect: s => s.name === 'DNA Cosmetics' ? s.price *= 0.81 : null },
+
+    // 👞 Devdas
+    { text: '🎬 Devdas featured in blockbuster movie! +24%', effect: s => s.name === 'Devdas' ? s.price *= 1.24 : null },
+    { text: '📉 Luxury demand slows down! -13%', effect: s => s.name === 'Devdas' ? s.price *= 0.87 : null },
+
+    // 📰 Multi-company news
+    {
+        text: '📜 New digital regulations announced!',
+        effect: s => (s.name === 'Finstagram' || s.name === 'No Bank') ? s.price *= 0.85 : null
+    },
+    {
+        text: '🚀 AI sector receives massive funding boost!',
+        effect: s => (s.name === 'Infokix' || s.name === 'Finstagram' || s.name === 'No Bank') ? s.price *= 1.22 : null
+    },
+    {
+        text: '⚡ EV infrastructure expanded nationwide!',
+        effect: s => (s.name === 'DMW' || s.name === 'Batata Steel') ? s.price *= 1.18 : null
+    },
+    {
+        text: '🎬 Bollywood fashion trend goes viral!',
+        effect: s => (s.name === 'JAS-47' || s.name === 'Devdas') ? s.price *= 1.25 : null
+    },
+    {
+        text: '💳 Digital payments boom across India!',
+        effect: s => (s.name === 'CFDH Bank' || s.name === 'No Bank') ? s.price *= 1.20 : null
+    },
+    {
+        text: '🌍 Global recession fears rise!',
+        effect: s => (s.name === 'DMW' || s.name === 'Devdas' || s.name === 'Artix') ? s.price *= 0.82 : null
+    },
+    {
+        text: '📱 Social commerce explodes!',
+        effect: s => (s.name === 'Finstagram' || s.name === 'DNA Cosmetics' || s.name === 'JAS-47') ? s.price *= 1.23 : null
+    },
+    {
+        text: '⚠️ Major cybersecurity threat reported!',
+        effect: s => (s.name === 'Infokix' || s.name === 'CFDH Bank' || s.name === 'No Bank') ? s.price *= 0.88 : null
+    }
+];
             const event = events[Math.floor(Math.random() * events.length)];
             document.getElementById('news').textContent = `Day ${gameState.day}: ${event.text}`;
 
