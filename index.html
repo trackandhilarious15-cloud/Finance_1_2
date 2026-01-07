@@ -425,10 +425,10 @@
                 <strong>📊 Average Final Portfolio:</strong> <span id="avg-value">₹10,000</span> (all games)
             </div>
             <div class="profile-rank">
-                <strong>🏫 Class Rank:</strong> <span id="class-rank">#1</span> / <span id="class-total">14</span> (from Sheet)
+                <strong>🏅 Trader Tier:</strong> <span id="trader-tier">Rookie</span>
             </div>
             <div class="profile-rank">
-                <strong>🌍 World Rank:</strong> <span id="world-rank">#1</span> / <span id="world-total">14</span> (from Sheet)
+                <strong>📈 Performance Percentile:</strong> Top <span id="performance-percentile">100</span>%
             </div>
         </div>
     </div>
@@ -807,6 +807,7 @@ const events = [
             gameState.permanentStats.lowestPortfolio = Math.min(gameState.permanentStats.lowestPortfolio, gameState.portfolioValue);
             
             savePermanentStats(gameState.currentUser, gameState.permanentStats);
+            calculateRankings(); // 🔥 UPDATE RANKINGS IMMEDIATELY
             
             const profit = ((gameState.portfolioValue - 10000) / 10000 * 100).toFixed(1);
             document.getElementById('news').innerHTML = `
@@ -911,23 +912,42 @@ const events = [
         function calculateRankings() {
             if (!gameState.currentUser || !gameState.permanentStats) return;
             
-            const permanentAverage = gameState.permanentStats.finalPortfolios.length > 0 
-                ? gameState.permanentStats.finalPortfolios.reduce((a, b) => a + b, 0) / gameState.permanentStats.finalPortfolios.length 
+            const stats = gameState.permanentStats;
+            const avg = stats.finalPortfolios.length > 0 
+                ? stats.finalPortfolios.reduce((a, b) => a + b, 0) / stats.finalPortfolios.length 
                 : 10000;
 
-            // ✅ CLASS RANK - FROM YOUR SCHOOL + GRADE IN SHEET
-            const classTotal = gameState.allClassmates.length + 1; // +1 for you
-            document.getElementById('class-rank').textContent = `#1`;
-            document.getElementById('class-total').textContent = classTotal;
+            // Calculate Tier and Percentile based on Average Portfolio Value
+            let tier = "Rookie";
+            let percentile = 100;
 
-            // ✅ WORLD RANK - TOTAL STUDENTS FROM YOUR SHEET (exactly 14)
-            document.getElementById('world-rank').textContent = `#1`;
-            document.getElementById('world-total').textContent = gameState.totalStudents;
+            if (avg >= 100000) {
+                tier = "Legendary Whale";
+                percentile = 1;
+            } else if (avg >= 50000) {
+                tier = "Wolf of Wall Street";
+                percentile = Math.max(2, Math.floor(10 - (avg - 50000) / 10000));
+            } else if (avg >= 25000) {
+                tier = "Pro Trader";
+                percentile = Math.max(11, Math.floor(30 - (avg - 25000) / 1000));
+            } else if (avg >= 15000) {
+                tier = "Investor";
+                percentile = Math.max(31, Math.floor(60 - (avg - 15000) / 300));
+            } else if (avg >= 10000) {
+                tier = "Beginner";
+                percentile = Math.max(61, Math.floor(95 - (avg - 10000) / 100));
+            } else {
+                tier = "Novice";
+                percentile = 99;
+            }
+
+            document.getElementById('trader-tier').textContent = tier;
+            document.getElementById('performance-percentile').textContent = percentile;
             
             // PERMANENT STATS
-            document.getElementById('highest-value').textContent = `₹${gameState.permanentStats.highestPortfolio.toLocaleString()}`;
-            document.getElementById('lowest-value').textContent = `₹${gameState.permanentStats.lowestPortfolio.toLocaleString()}`;
-            document.getElementById('avg-value').textContent = `₹${Math.round(permanentAverage).toLocaleString()}`;
+            document.getElementById('highest-value').textContent = `₹${stats.highestPortfolio.toLocaleString()}`;
+            document.getElementById('lowest-value').textContent = `₹${stats.lowestPortfolio.toLocaleString()}`;
+            document.getElementById('avg-value').textContent = `₹${Math.round(avg).toLocaleString()}`;
         }
 
         // === EVENT LISTENERS ===
