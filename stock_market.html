@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Simulator</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #87CEEB 0%, #4682B4 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 98%;
+            max-width: 1400px;
+            background: rgba(255, 255, 255, 0.97);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        #password-screen {
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        #password-screen h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 3.2em;
+            color: #4682B4;
+            margin-bottom: 35px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+        }
+
+        select, input[type="password"] {
+            width: 280px;
+            padding: 18px;
+            margin: 18px;
+            font-size: 1.3em;
+            border: 4px solid #4682B4;
+            border-radius: 15px;
+            background: white;
+            transition: all 0.4s;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #32CD32;
+            box-shadow: 0 0 20px rgba(50, 205, 50, 0.4);
+            transform: scale(1.02);
+        }
+
+        select:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+            color: #999;
+        }
+
+        #password-submit {
+            padding: 18px 50px;
+            font-size: 1.4em;
+            font-weight: 700;
+            background: linear-gradient(45deg, #4682B4, #5A9BD4);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.4s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 8px 25px rgba(70, 130, 180, 0.3);
+        }
+
+        #password-submit:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(70, 130, 180, 0.5);
+        }
+
+        #game-screen {
+            display: none;
+        }
+
+        #game-screen h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 3.5em;
+            color: #4682B4;
+            margin-bottom: 25px;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.2);
+        }
+
+        #profile-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #FF6B6B, #FF5252);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.4s;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        #profile-btn:hover {
+            transform: scale(1.08) translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.6);
+        }
+
+        #news {
+            background: linear-gradient(135deg, #E0F7FA, #B2EBF2);
+            padding: 25px;
+            border-radius: 20px;
+            margin: 25px 0;
+            font-size: 1.4em;
+            font-weight: 600;
+            border-left: 8px solid #00BCD4;
+            box-shadow: 0 8px 30px rgba(0, 188, 212, 0.3);
+            line-height: 1.5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        th {
+            background: linear-gradient(135deg, #4682B4, #5A9BD4);
+            color: white;
+            padding: 25px;
+            font-weight: 700;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 22px;
+            border-bottom: 2px solid #f0f0f0;
+            font-weight: 500;
+        }
+
+        tr:hover {
+            background: rgba(70, 130, 180, 0.15);
+            transform: scale(1.01);
+        }
+
+        .stock-name {
+            cursor: pointer;
+            color: #4682B4;
+            font-weight: 800;
+            font-size: 1.1em;
+            transition: all 0.4s;
+            display: block;
+        }
+
+        .stock-name:hover {
+            color: #32CD32;
+            transform: scale(1.1);
+            text-shadow: 0 0 10px rgba(50, 205, 50, 0.5);
+        }
+
+        input[type="number"] {
+            width: 85px;
+            padding: 12px;
+            border: 3px solid #4682B4;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #32CD32, #4CAF50);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1em;
+            transition: all 0.4s;
+            margin: 0 8px;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(50, 205, 50, 0.5);
+        }
+
+        #next-day, #restart-game {
+            padding: 25px 60px;
+            font-size: 1.5em;
+            font-weight: 800;
+            margin: 25px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 35px rgba(70, 130, 180, 0.4);
+        }
+
+        #restart-game {
+            background: linear-gradient(45deg, #FF6B6B, #FF5252);
+            box-shadow: 0 10px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        #portfolio {
+            font-size: 1.8em;
+            font-weight: 800;
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+            border-radius: 20px;
+            border-left: 10px solid #FF9800;
+            box-shadow: 0 15px 45px rgba(255, 152, 0, 0.3);
+        }
+
+        #chart-container {
+            position: relative;
+            height: 500px;
+            margin-top: 40px;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            background: white;
+            padding: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
+            padding: 50px;
+            border-radius: 25px;
+            max-width: 600px;
+            width: 92%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+            border: 5px solid #4682B4;
+        }
+
+        .modal h2 {
+            font-family: 'Orbitron', monospace;
+            margin-top: 0;
+            text-align: center;
+            font-size: 2.2em;
+            color: #4682B4;
+        }
+
+        .profile-stat, .profile-rank {
+            margin: 25px 0;
+            padding: 30px;
+            border-radius: 20px;
+            font-size: 1.4em;
+            font-weight: 700;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s;
+        }
+
+        .profile-stat:hover {
+            transform: translateY(-5px);
+        }
+
+        .profile-stat {
+            background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+            border-left: 10px solid #4682B4;
+        }
+
+        .profile-rank {
+            background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+            border-left: 10px solid #FF9800;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: linear-gradient(45deg, #FF6B6B, #FF5252);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.4s;
+        }
+
+        .close-modal:hover {
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.6);
+        }
+
+        .flash {
+            animation: flash 0.8s ease-in-out;
+        }
+
+#game-buttons {
+    position: fixed;       /* fixed relative to viewport */
+    bottom: 0px;          /* distance from bottom */
+    right: 0px;           /* distance from right */
+    display: flex;
+    gap: 15px;             /* space between buttons */
+    z-index: 1000;         /* ensure above other elements */
+}
+
+#profile-btn, #logout-btn {
+    padding: 15px 30px;
+    font-size: 1.1em;
+    font-weight: 700;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.4s;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+#profile-btn {
+    background: linear-gradient(45deg, #FF6B6B, #FF5252);
+    color: white;
+}
+
+#logout-btn {
+    background: linear-gradient(45deg, #FF9800, #FFB74D);
+    color: white;
+}
+
+#profile-btn:hover, #logout-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+}
+
+
+        @keyframes flash {
+            0%, 100% { background: rgba(255, 215, 0, 0.9); transform: scale(1.03); }
+            50% { background: rgba(255, 255, 0, 1); transform: scale(1.08); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 20px; margin: 10px; width: 96%; }
+            table { font-size: 0.95em; }
+            input[type="number"] { width: 70px; }
+            select, input[type="password"] { width: 100%; margin: 12px 0; }
+            #chart-container { height: 400px; }
+            #game-screen h1 { font-size: 2.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LOGIN SCREEN -->
+        <div id="password-screen">
+            <h1>Trader Details</h1>
+            <select id="school-select">
+                <option value="">Select School</option>
+            </select>
+            <br>
+            <select id="grade-select" disabled>
+                <option value="">Select Grade</option>
+            </select>
+            <br>
+            <select id="name-select" disabled>
+                <option value="">Select Student</option>
+            </select>
+            <br>
+            <input type="password" id="password-input" placeholder="Enter Password (default: 1234)" disabled>
+            <br>
+            <button id="password-submit">🚀 Start Trading</button>
+            <p style="font-size: 1em; color: #666; margin-top: 25px;">
+                💸 Developed by Vikrant Vinayak Chipkar | Stock Market Simulator 🪙
+            </p>
+        </div>
+
+        <!-- GAME SCREEN -->
+        <div id="game-screen">
+            <button id="profile-btn">📊 My Profile</button>
+            <button id="logout-btn">🔓 Logout</button>
+            <h1>₹ Stock Market Simulator ₹</h1>
+            
+            <div id="news">🔥 Welcome! Buy low, sell high, survive 30 days!</div>
+            
+            <table id="stock-table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Price (₹)</th>
+                        <th>Owned</th>
+                        <th>Buy</th>
+                        <th>Sell</th>
+                    </tr>
+                </thead>
+                <tbody id="stock-body"></tbody>
+            </table>
+            
+            <div>
+                <button id="next-day">➡️ Next Day (Day 1)</button>
+                <button id="restart-game" style="display: none;">🔄 New Game</button>
+            </div>
+            
+            <div id="portfolio">💰 Portfolio Value: ₹10,000 | Cash: ₹10,000</div>
+            <div id="chart-container">
+                <canvas id="stockChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-profile">×</button>
+            <h2 id="profile-title">My Trading Profile</h2>
+            <div class="profile-stat">
+                <strong>🏆 Highest Portfolio:</strong> <span id="highest-value">₹10,000</span> (all games)
+            </div>
+            <div class="profile-stat">
+                <strong>📉 Lowest Portfolio:</strong> <span id="lowest-value">₹10,000</span> (all games)
+            </div>
+            <div class="profile-stat">
+                <strong>📊 Average Final Portfolio:</strong> <span id="avg-value">₹10,000</span> (all games)
+            </div>
+            <div class="profile-rank">
+                <strong>🏅 Trader Tier:</strong> <span id="trader-tier">Rookie</span>
+            </div>
+            <div class="profile-rank">
+                <strong>📈 Performance Percentile:</strong> Top <span id="performance-percentile">100</span>%
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPANY MODAL -->
+    <div id="company-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-company">×</button>
+            <h2 id="company-title"></h2>
+            <div id="company-description" style="font-size: 1.2em; line-height: 1.7; color: #444; text-align: left;"></div>
+        </div>
+    </div>
+
+    <script>
+        // === GOOGLE SHEETS CONFIG ===
+        const GOOGLE_CONFIG = {
+            API_KEY: 'AIzaSyDQd2zlNNH1mXz6otZgSYywj9XkXfmL0QI',
+            SHEET_ID: '1KJP_B3kLUotGkt4w3vQjLtFUiC5XikqaAejIA4U14Tg',
+            STUDENT_RANGE: 'Sheet1!A:E'
+        };
+
+        // === PERMANENT STATS STORAGE ===
+        function getPermanentStats(userId) {
+            const stats = localStorage.getItem(`stockgame_${userId}`);
+            return stats ? JSON.parse(stats) : {
+                highestPortfolio: 10000,
+                lowestPortfolio: 10000,
+                finalPortfolios: [],
+                gamesPlayed: 0
+            };
+        }
+
+        function savePermanentStats(userId, stats) {
+            localStorage.setItem(`stockgame_${userId}`, JSON.stringify(stats));
+        }
+
+        // === GAME STATE ===
+        let gameState = {
+            cash: 10000,
+            portfolioValue: 10000,
+            day: 1,
+            maxDays: 30,
+            gameEnded: false,
+            portfolioHistory: [10000],
+            playerAverage: 10000,
+            currentUser: null,
+            studentData: [],
+            stocks: [],
+            permanentStats: null,
+            allClassmates: [],
+            totalStudents: 0
+        };
+
+        // === STOCKS ===
+        const initialStocks = [
+            {name: 'JAS-47', price: 100, owned: 0, history: [100], color: '#FF6384'},
+            {name: 'Finstagram', price: 150, owned: 0, history: [150], color: '#36A2EB'},
+            {name: 'CFDH Bank', price: 200, owned: 0, history: [200], color: '#FFCE56'},
+            {name: 'Infokix', price: 80, owned: 0, history: [80], color: '#4BC0C0'},
+            {name: 'DMW', price: 120, owned: 0, history: [120], color: '#9966FF'},
+            {name: 'Artix', price: 90, owned: 0, history: [90], color: '#FF9F40'},
+            {name: 'No Bank', price: 180, owned: 0, history: [180], color: '#FF5733'},
+            {name: 'Batata Steel', price: 110, owned: 0, history: [110], color: '#33FF57'},
+            {name: 'DNA Cosmetics', price: 95, owned: 0, history: [95], color: '#3357FF'},
+            {name: 'Devdas', price: 130, owned: 0, history: [130], color: '#FF33A8'}
+        ];
+
+        const companyInfo = {
+            'JAS-47': 'A premium lifestyle and fashion brand that dominates the youth market with trendsetting apparel, exclusive celebrity collaborations, and limited-edition collections. Known for its edgy streetwear and high-quality fabrics, it sets global fashion trends and creates strong brand loyalty among young consumers.',
+            'Finstagram': "India's leading social media platform, powered by advanced AI algorithms that personalize content feeds, offer live streaming, interactive stories, and seamless social networking experiences. It is the go-to hub for creators, influencers, and everyday users seeking real-time engagement and viral content.",
+            'CFDH Bank': 'The largest private bank in India, renowned for its innovative digital banking solutions, seamless online services, and customer-centric approach. It offers a wide range of financial products, including loans, investments, and wealth management, while leveraging technology to enhance convenience and security.',
+            'Infokix': 'A global IT powerhouse specializing in artificial intelligence, cloud computing, cybersecurity, and enterprise solutions. Infokix delivers cutting-edge technology services to businesses worldwide, helping them achieve operational efficiency, data-driven insights, and robust digital transformation.',
+            'DMW': "India's leading automobile manufacturer known for producing high-performance electric vehicles, luxury cars, and innovative mobility solutions. DMW focuses on sustainability, advanced engineering, and sleek designs that appeal to both eco-conscious consumers and luxury car enthusiasts.",
+            'Artix': 'A luxury art and home décor brand offering meticulously handcrafted designer collections. From contemporary paintings to bespoke furniture, Artix combines creativity with craftsmanship to bring exclusive, statement-making pieces that elevate living spaces and artistic expression.',
+            'No Bank': 'A revolutionary digital-only bank leveraging blockchain technology and AI-driven financial advisors to offer secure, personalized, and seamless banking services. It provides instant transactions, intelligent investment recommendations, and modern solutions for tech-savvy users seeking complete financial control.',
+            'Batata Steel': "India's largest and most trusted steel producer, supplying high-quality materials for infrastructure projects, construction, and industrial applications. Known for innovation, sustainability, and consistency, Batata Steel supports the nation's growth and global engineering standards.",
+            'DNA Cosmetics': 'A leading beauty and skincare brand famous for its viral social media campaigns, influencer collaborations, and trend-setting cosmetic products. DNA Cosmetics emphasizes innovation, inclusivity, and high-performance formulations that resonate with a digitally connected audience.',
+            'Devdas': 'A premium footwear brand blending Italian craftsmanship with Bollywood-inspired designs. Devdas is recognized for luxury shoes, meticulous attention to detail, and stylish collaborations that appeal to fashion-forward consumers seeking both elegance and comfort.'
+        };
+
+        // === LOAD ALL STUDENTS FROM GOOGLE SHEETS ===
+        function loadStudentData() {
+            gapi.load('client:auth2', () => {
+                gapi.client.init({
+                    apiKey: GOOGLE_CONFIG.API_KEY,
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+                }).then(() => {
+                    return gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
+                        range: GOOGLE_CONFIG.STUDENT_RANGE
+                    });
+                }).then((response) => {
+                    const rows = response.result.values;
+                    if (rows && rows.length > 1) {
+                        gameState.studentData = rows.slice(1).map((row, i) => ({
+                            srNo: row[0] || i + 1,
+                            school: row[1] || 'Demo School',
+                            grade: row[2] || '10',
+                            name: row[3] || `Student ${i + 1}`,
+                            password: row[4] || '1234'
+                        }));
+                        gameState.totalStudents = gameState.studentData.length;
+                        console.log(`✅ LOADED ${gameState.totalStudents} REAL STUDENTS FROM SHEET`);
+                        populateDropdowns();
+                    } else {
+                        useDemoData();
+                    }
+                }).catch((error) => {
+                    console.log('Google Sheets failed, using demo data:', error);
+                    useDemoData();
+                });
+            });
+        }
+
+        function useDemoData() {
+            gameState.studentData = [
+                {school: 'Demo High School', grade: '10', name: 'Rahul Sharma', password: '1234', srNo: 1},
+                {school: 'Demo High School', grade: '10', name: 'Priya Patel', password: '1234', srNo: 2},
+                {school: 'Demo High School', grade: '9', name: 'Amit Kumar', password: '1234', srNo: 3},
+                {school: 'Elite Academy', grade: '10', name: 'Sneha Gupta', password: '1234', srNo: 4}
+            ];
+            gameState.totalStudents = gameState.studentData.length;
+            populateDropdowns();
+        }
+
+        function populateDropdowns() {
+            const schoolSelect = document.getElementById('school-select');
+            const schools = [...new Set(gameState.studentData.map(s => s.school))];
+            schoolSelect.innerHTML = '<option value="">📚 Select School</option>';
+            schools.forEach(school => {
+                const option = document.createElement('option');
+                option.value = school;
+                option.textContent = school;
+                schoolSelect.appendChild(option);
+            });
+        }
+
+        // === LOGIN SYSTEM ===
+        document.getElementById('school-select').addEventListener('change', function() {
+            const school = this.value;
+            const gradeSelect = document.getElementById('grade-select');
+            gradeSelect.innerHTML = '<option value="">📊 Select Grade</option>';
+            gradeSelect.disabled = !school;
+            if (school) {
+                const grades = [...new Set(gameState.studentData.filter(s => s.school === school).map(s => s.grade))].sort();
+                grades.forEach(grade => {
+                    const option = document.createElement('option');
+                    option.value = grade;
+                    option.textContent = grade;
+                    gradeSelect.appendChild(option);
+                });
+            }
+        });
+
+        document.getElementById('grade-select').addEventListener('change', function() {
+            const grade = this.value;
+            const school = document.getElementById('school-select').value;
+            const nameSelect = document.getElementById('name-select');
+            nameSelect.innerHTML = '<option value="">👤 Select Student</option>';
+            nameSelect.disabled = !grade;
+            if (grade && school) {
+                const students = gameState.studentData
+                    .filter(s => s.school === school && s.grade === grade)
+                    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                students.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.name;
+                    option.textContent = student.name;
+                    nameSelect.appendChild(option);
+                });
+            }
+        });
+
+        document.getElementById('name-select').addEventListener('change', function() {
+            document.getElementById('password-input').disabled = !this.value;
+        });
+
+        document.getElementById('password-submit').addEventListener('click', function() {
+            const school = document.getElementById('school-select').value;
+            const grade = document.getElementById('grade-select').value;
+            const name = document.getElementById('name-select').value;
+            const password = document.getElementById('password-input').value;
+
+            const student = gameState.studentData.find(s => 
+                s.school === school && s.grade === grade && s.name === name && s.password === password
+            );
+
+            if (student) {
+                gameState.currentUser = `${school}-${grade}-${name}`;
+                gameState.permanentStats = getPermanentStats(gameState.currentUser);
+                
+                // GET ALL CLASSMATES FROM SAME SCHOOL + GRADE (excluding yourself)
+                gameState.allClassmates = gameState.studentData.filter(s => 
+                    s.school === school && s.grade === grade && s.name !== name
+                );
+                
+                document.getElementById('password-screen').style.display = 'none';
+                document.getElementById('game-screen').style.display = 'block';
+                document.getElementById('profile-title').textContent = `${name}'s Trading Profile`;
+                startNewGame();
+            } else {
+                alert('❌ Wrong credentials! Password is usually "1234"');
+            }
+        });
+
+        // === GAME FUNCTIONS ===
+        function startNewGame() {
+            gameState.stocks = JSON.parse(JSON.stringify(initialStocks));
+            gameState.cash = 10000;
+            gameState.portfolioValue = 10000;
+            gameState.day = 1;
+            gameState.gameEnded = false;
+            gameState.portfolioHistory = [10000];
+            gameState.playerAverage = 10000;
+            gameState.permanentStats.gamesPlayed++;
+
+            document.getElementById('next-day').textContent = `➡️ Next Day (Day ${gameState.day})`;
+            document.getElementById('next-day').style.display = 'inline-block';
+            document.getElementById('restart-game').style.display = 'none';
+            document.getElementById('news').textContent = '🎮 Game Started! Trade smart to beat 30 days!';
+            renderStockTable();
+            updatePortfolioDisplay();
+            initializeChart();
+            savePermanentStats(gameState.currentUser, gameState.permanentStats);
+        }
+
+        window.showCompanyInfo = function(stockName) {
+            const info = companyInfo[stockName];
+            if (info) {
+                document.getElementById('company-title').textContent = stockName;
+                document.getElementById('company-description').textContent = info;
+                document.getElementById('company-modal').style.display = 'flex';
+            }
+        };
+
+        window.buyStock = function(index) {
+            const qty = parseInt(document.getElementById(`buy-qty-${index}`).value) || 1;
+            const stock = gameState.stocks[index];
+            const cost = stock.price * qty;
+            if (qty > 0 && cost <= gameState.cash) {
+                stock.owned += qty;
+                gameState.cash -= cost;
+                flashRow(index);
+                renderStockTable();
+                updatePortfolioDisplay();
+                document.getElementById(`buy-qty-${index}`).value = 1;
+            }
+        };
+
+        window.sellStock = function(index) {
+            const qty = parseInt(document.getElementById(`sell-qty-${index}`).value) || 1;
+            const stock = gameState.stocks[index];
+            if (qty > 0 && qty <= stock.owned) {
+                stock.owned -= qty;
+                gameState.cash += stock.price * qty;
+                flashRow(index);
+                renderStockTable();
+                updatePortfolioDisplay();
+                document.getElementById(`sell-qty-${index}`).value = 1;
+            }
+        };
+
+        function nextDay() {
+            if (gameState.gameEnded || gameState.day >= gameState.maxDays) {
+                endGame();
+                return;
+            }
+
+            gameState.day++;
+
+const events = [
+    // 🌍 Market-wide events
+    { text: '📈 Bull Market! All stocks +12%', effect: s => s.price *= 1.12 },
+    { text: '📉 Bear Market! All stocks -8%', effect: s => s.price *= 0.92 },
+    { text: '💸 Inflation fears hit markets! -10%', effect: s => s.price *= 0.90 },
+    { text: '🏆 Strong economic data released! +15%', effect: s => s.price *= 1.15 },
+
+    // 👕 JAS-47
+    { text: '🌟 Celebrity endorses JAS-47! +30%', effect: s => s.name === 'JAS-47' ? s.price *= 1.30 : null },
+    { text: '👕 Fashion trend fades for JAS-47! -18%', effect: s => s.name === 'JAS-47' ? s.price *= 0.82 : null },
+
+    // 📱 Finstagram
+    { text: '📱 New AI reel algorithm boosts Finstagram! +25%', effect: s => s.name === 'Finstagram' ? s.price *= 1.25 : null },
+    { text: '🔒 Finstagram data privacy issue! -22%', effect: s => s.name === 'Finstagram' ? s.price *= 0.78 : null },
+
+    // 🏦 CFDH Bank
+    { text: '🏦 CFDH Bank reports record profits! +20%', effect: s => s.name === 'CFDH Bank' ? s.price *= 1.20 : null },
+    { text: '📉 Rising NPAs worry investors! -15%', effect: s => s.name === 'CFDH Bank' ? s.price *= 0.85 : null },
+
+    // 🤖 Infokix
+    { text: '🤖 Infokix signs global AI deal! +28%', effect: s => s.name === 'Infokix' ? s.price *= 1.28 : null },
+    { text: '⚠️ Cyber attack impacts Infokix clients! -20%', effect: s => s.name === 'Infokix' ? s.price *= 0.80 : null },
+
+    // ⚡ DMW
+    { text: '⚡ DMW launches affordable EV! +32%', effect: s => s.name === 'DMW' ? s.price *= 1.32 : null },
+    { text: '🚗 EV subsidy cut hurts DMW! -18%', effect: s => s.name === 'DMW' ? s.price *= 0.82 : null },
+
+    // 🎨 Artix
+    { text: '🖼️ Artix collection goes viral globally! +26%', effect: s => s.name === 'Artix' ? s.price *= 1.26 : null },
+    { text: '📦 Supply delays at Artix! -14%', effect: s => s.name === 'Artix' ? s.price *= 0.86 : null },
+
+    // 🔗 No Bank
+    { text: '🔗 No Bank launches AI financial advisor! +35%', effect: s => s.name === 'No Bank' ? s.price *= 1.35 : null },
+    { text: '📜 Regulatory pressure on No Bank! -25%', effect: s => s.name === 'No Bank' ? s.price *= 0.75 : null },
+
+    // 🏗️ Batata Steel
+    { text: '🏗️ Mega infrastructure project announced! +22%', effect: s => s.name === 'Batata Steel' ? s.price *= 1.22 : null },
+    { text: '🌍 Global steel prices fall! -16%', effect: s => s.name === 'Batata Steel' ? s.price *= 0.84 : null },
+
+    // 💄 DNA Cosmetics
+    { text: '💄 DNA Cosmetics trends on social media! +27%', effect: s => s.name === 'DNA Cosmetics' ? s.price *= 1.27 : null },
+    { text: '🧪 Quality issue reported at DNA! -19%', effect: s => s.name === 'DNA Cosmetics' ? s.price *= 0.81 : null },
+
+    // 👞 Devdas
+    { text: '🎬 Devdas featured in blockbuster movie! +24%', effect: s => s.name === 'Devdas' ? s.price *= 1.24 : null },
+    { text: '📉 Luxury demand slows down! -13%', effect: s => s.name === 'Devdas' ? s.price *= 0.87 : null },
+
+    // 📰 Multi-company news
+    {
+        text: '📜 New digital regulations announced!',
+        effect: s => (s.name === 'Finstagram' || s.name === 'No Bank') ? s.price *= 0.85 : null
+    },
+    {
+        text: '🚀 AI sector receives massive funding boost!',
+        effect: s => (s.name === 'Infokix' || s.name === 'Finstagram' || s.name === 'No Bank') ? s.price *= 1.22 : null
+    },
+    {
+        text: '⚡ EV infrastructure expanded nationwide!',
+        effect: s => (s.name === 'DMW' || s.name === 'Batata Steel') ? s.price *= 1.18 : null
+    },
+    {
+        text: '🎬 Bollywood fashion trend goes viral!',
+        effect: s => (s.name === 'JAS-47' || s.name === 'Devdas') ? s.price *= 1.25 : null
+    },
+    {
+        text: '💳 Digital payments boom across India!',
+        effect: s => (s.name === 'CFDH Bank' || s.name === 'No Bank') ? s.price *= 1.20 : null
+    },
+    {
+        text: '🌍 Global recession fears rise!',
+        effect: s => (s.name === 'DMW' || s.name === 'Devdas' || s.name === 'Artix') ? s.price *= 0.82 : null
+    },
+    {
+        text: '📱 Social commerce explodes!',
+        effect: s => (s.name === 'Finstagram' || s.name === 'DNA Cosmetics' || s.name === 'JAS-47') ? s.price *= 1.23 : null
+    },
+    {
+        text: '⚠️ Major cybersecurity threat reported!',
+        effect: s => (s.name === 'Infokix' || s.name === 'CFDH Bank' || s.name === 'No Bank') ? s.price *= 0.88 : null
+    }
+];
+            const event = events[Math.floor(Math.random() * events.length)];
+            document.getElementById('news').textContent = `Day ${gameState.day}: ${event.text}`;
+
+            gameState.stocks.forEach(stock => {
+                if (event.effect) event.effect(stock);
+                const change = 0.93 + Math.random() * 0.14;
+                stock.price *= change;
+                stock.price = Math.max(5, Math.round(stock.price));
+                stock.history.push(stock.price);
+            });
+
+            document.getElementById('next-day').textContent = `➡️ Next Day (Day ${gameState.day})`;
+            renderStockTable();
+            updatePortfolioDisplay();
+            updateChart();
+            if (gameState.day >= gameState.maxDays) endGame();
+        }
+
+        function endGame() {
+            if (gameState.gameEnded) return;
+            gameState.gameEnded = true;
+            
+            gameState.permanentStats.finalPortfolios.push(gameState.portfolioValue);
+            gameState.permanentStats.highestPortfolio = Math.max(gameState.permanentStats.highestPortfolio, gameState.portfolioValue);
+            gameState.permanentStats.lowestPortfolio = Math.min(gameState.permanentStats.lowestPortfolio, gameState.portfolioValue);
+            
+            savePermanentStats(gameState.currentUser, gameState.permanentStats);
+            calculateRankings(); // 🔥 UPDATE RANKINGS IMMEDIATELY
+            
+            const profit = ((gameState.portfolioValue - 10000) / 10000 * 100).toFixed(1);
+            document.getElementById('news').innerHTML = `
+                🎉 <strong>GAME COMPLETE!</strong><br>
+                Final Portfolio: <strong style="color: ${profit >= 0 ? '#32CD32' : '#FF6B6B'}">
+                ₹${gameState.portfolioValue.toLocaleString()}
+                </strong><br>
+                ${profit >= 0 ? '📈 Profit' : '📉 Loss'}: <strong>${profit > 0 ? '+' : ''}${profit}%</strong>
+            `;
+            document.getElementById('next-day').style.display = 'none';
+            document.getElementById('restart-game').style.display = 'inline-block';
+        }
+
+        function renderStockTable() {
+            document.getElementById('stock-body').innerHTML = 
+                gameState.stocks.map((stock, i) => `
+                    <tr>
+                        <td class="stock-name" onclick="showCompanyInfo('${stock.name}')">${stock.name}</td>
+                        <td id="price-${i}">₹${stock.price.toLocaleString()}</td>
+                        <td id="owned-${i}">${stock.owned}</td>
+                        <td>
+                            <input type="number" id="buy-qty-${i}" min="1" max="100" value="1">
+                            <button onclick="buyStock(${i})">Buy</button>
+                        </td>
+                        <td>
+                            <input type="number" id="sell-qty-${i}" min="1" max="100" value="1">
+                            <button onclick="sellStock(${i})">Sell</button>
+                        </td>
+                    </tr>
+                `).join('');
+        }
+
+        function updatePortfolioDisplay() {
+            gameState.portfolioValue = gameState.cash + 
+                gameState.stocks.reduce((sum, stock) => sum + (stock.price * stock.owned), 0);
+            
+            gameState.portfolioHistory.push(gameState.portfolioValue);
+            gameState.playerAverage = gameState.portfolioHistory.reduce((a, b) => a + b, 0) / gameState.portfolioHistory.length;
+            
+            document.getElementById('portfolio').textContent = 
+                `💰 Portfolio: ₹${gameState.portfolioValue.toLocaleString()} | Cash: ₹${gameState.cash.toLocaleString()}`;
+        }
+
+        let stockChart;
+        function initializeChart() {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            if (stockChart) stockChart.destroy();
+            
+            stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(gameState.day).fill(0).map((_, i) => `D${i + 1}`),
+                    datasets: gameState.stocks.map((stock, i) => ({
+                        label: stock.name,
+                        data: stock.history.slice(0, gameState.day),
+                        borderColor: stock.color,
+                        backgroundColor: stock.color + '30',
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        fill: false
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 14 }, padding: 20 } },
+                        title: { display: true, text: `📈 Stock Performance - Day ${gameState.day} of 30`, font: { size: 20, weight: 'bold' } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.1)' }, ticks: { font: { size: 12 } } },
+                        x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 12 } } }
+                    },
+                    animation: { duration: 1500, easing: 'easeInOutQuart' },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (stockChart) {
+                stockChart.data.labels = Array(gameState.day).fill(0).map((_, i) => `D${i + 1}`);
+                gameState.stocks.forEach((stock, i) => {
+                    stockChart.data.datasets[i].data = stock.history.slice(0, gameState.day);
+                });
+                stockChart.options.plugins.title.text = `📈 Stock Performance - Day ${gameState.day} of 30`;
+                stockChart.update('active');
+            }
+        }
+
+        function flashRow(index) {
+            const row = document.querySelector(`#price-${index}`)?.closest('tr');
+            if (row) {
+                row.classList.add('flash');
+                setTimeout(() => row.classList.remove('flash'), 800);
+            }
+        }
+
+        // === 100% FROM GOOGLE SHEET - NO FAKE NUMBERS ===
+        function calculateRankings() {
+            if (!gameState.currentUser || !gameState.permanentStats) return;
+            
+            const stats = gameState.permanentStats;
+            const avg = stats.finalPortfolios.length > 0 
+                ? stats.finalPortfolios.reduce((a, b) => a + b, 0) / stats.finalPortfolios.length 
+                : 10000;
+
+            // Calculate Tier and Percentile based on Average Portfolio Value
+            let tier = "Rookie";
+            let percentile = 100;
+
+            if (avg >= 100000) {
+                tier = "Legendary Whale";
+                percentile = 1;
+            } else if (avg >= 50000) {
+                tier = "Wolf of Wall Street";
+                percentile = Math.max(2, Math.floor(10 - (avg - 50000) / 10000));
+            } else if (avg >= 25000) {
+                tier = "Pro Trader";
+                percentile = Math.max(11, Math.floor(30 - (avg - 25000) / 1000));
+            } else if (avg >= 15000) {
+                tier = "Investor";
+                percentile = Math.max(31, Math.floor(60 - (avg - 15000) / 300));
+            } else if (avg >= 10000) {
+                tier = "Beginner";
+                percentile = Math.max(61, Math.floor(95 - (avg - 10000) / 100));
+            } else {
+                tier = "Novice";
+                percentile = 99;
+            }
+
+            document.getElementById('trader-tier').textContent = tier;
+            document.getElementById('performance-percentile').textContent = percentile;
+            
+            // PERMANENT STATS
+            document.getElementById('highest-value').textContent = `₹${stats.highestPortfolio.toLocaleString()}`;
+            document.getElementById('lowest-value').textContent = `₹${stats.lowestPortfolio.toLocaleString()}`;
+            document.getElementById('avg-value').textContent = `₹${Math.round(avg).toLocaleString()}`;
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+    // Optional: clear current game state
+    gameState.currentUser = null;
+    gameState.permanentStats = null;
+
+    // Go back to login page
+    window.location.href = 'login.html';
+});
+
+
+        // === EVENT LISTENERS ===
+        document.getElementById('profile-btn').onclick = () => {
+            calculateRankings();
+            document.getElementById('profile-modal').style.display = 'flex';
+        };
+
+        document.getElementById('next-day').onclick = nextDay;
+        document.getElementById('restart-game').onclick = startNewGame;
+
+        document.querySelectorAll('.close-modal, .modal').forEach(el => {
+            el.onclick = function(e) {
+                if (e.target.classList.contains('close-modal') || e.target.classList.contains('modal')) {
+                    e.target.closest('.modal').style.display = 'none';
+                }
+            };
+        });
+
+        window.onload = loadStudentData;
+    </script>
+</body>
+</html>
