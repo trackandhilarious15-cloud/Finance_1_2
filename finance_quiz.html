@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Speed Quiz</title>
+    <style>
+        :root {
+            --cricket-green: #1a472a;
+            --cricket-light-green: #2e8b57;
+            --cricket-ball: #d32f2f;
+            --cricket-white: #ffffff;
+            --cricket-gold: #ffd700;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--cricket-green) 0%, var(--cricket-light-green) 100%);
+            color: var(--cricket-white);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(15px);
+            border: 3px solid var(--cricket-gold);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 95%;
+            max-width: 900px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            border-bottom: 3px solid var(--cricket-gold);
+            display: inline-block;
+            padding-bottom: 15px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .cricket-icon {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        #loading-screen {
+            display: block;
+        }
+
+        #game-screen {
+            display: none;
+        }
+
+        #error-screen {
+            display: none;
+        }
+
+        .game-layout {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 30px;
+        }
+
+        .meme-display {
+            width: 180px;
+            display: none;
+        }
+
+        .meme-display.active {
+            display: block;
+        }
+
+        .meme-display img {
+            width: 100%;
+            border-radius: 15px;
+            border: 3px solid var(--cricket-gold);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .quiz-content {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .lives-display {
+            color: var(--cricket-ball);
+        }
+
+        .lives-display span {
+            font-size: 1.5rem;
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 15px;
+            background: #444;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--cricket-gold), #ff8c00);
+            transition: width 0.1s linear;
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid var(--cricket-gold);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .options-grid.two-options {
+            grid-template-columns: 1fr;
+        }
+
+        button.option-btn {
+            background: var(--cricket-white);
+            color: var(--cricket-green);
+            border: none;
+            padding: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 5px 0 #ccc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button.option-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            transition: 0.5s;
+        }
+
+        button.option-btn:hover::before {
+            left: 100%;
+        }
+
+        button.option-btn:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+
+        button.option-btn:hover {
+            background: var(--cricket-gold);
+            transform: translateY(-2px);
+        }
+
+        .correct { 
+            background: #4caf50 !important; 
+            color: white !important; 
+            box-shadow: 0 5px 0 #2e7d32 !important;
+        }
+        
+        .wrong { 
+            background: var(--cricket-ball) !important; 
+            color: white !important; 
+            box-shadow: 0 5px 0 #b71c1c !important;
+        }
+
+        #result-screen {
+            display: none;
+        }
+
+        .final-score {
+            font-size: 5rem;
+            color: var(--cricket-gold);
+            margin: 20px 0;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .result-message {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .btn-restart {
+            background: linear-gradient(45deg, var(--cricket-gold), #ff8c00);
+            color: var(--cricket-green);
+            border: none;
+            padding: 20px 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: 0.3s;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-restart:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+        }
+
+        .loader {
+            border: 6px solid rgba(255,255,255,0.3);
+            border-top: 6px solid var(--cricket-gold);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: var(--cricket-ball);
+            font-size: 1.2rem;
+            margin: 20px 0;
+        }
+
+        .btn-retry {
+            background: var(--cricket-gold);
+            color: var(--cricket-green);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .game-layout {
+                flex-direction: column;
+            }
+            
+            .meme-display {
+                display: none !important;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .question-text {
+                font-size: 1.1rem;
+            }
+            
+            .container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Loading Screen -->
+        <div id="loading-screen">
+            <span class="cricket-icon">🏏</span>
+            <h1>Loading Match Data...</h1>
+            <p>Fetching <code>finance_quiz_1000_questions.csv</code></p>
+            <div class="loader"></div>
+            <p id="loading-status" style="color: var(--cricket-gold);"></p>
+        </div>
+
+        <!-- Error Screen -->
+        <div id="error-screen">
+            <span class="cricket-icon">❌</span>
+            <h1>Error Loading Quiz</h1>
+            <p class="error-message" id="error-text"></p>
+            <button class="btn-retry" onclick="location.reload()">Retry</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen">
+            <div class="game-layout">
+                <div class="meme-display" id="meme-display">
+                    <img id="meme-image" src="" alt="Cricket Meme">
+                </div>
+                
+                <div class="quiz-content">
+                    <div class="hud">
+                        <span id="question-counter">Q: 1/1000</span>
+                        <span id="score-display">Score: 0</span>
+                        <span class="lives-display">Lives: <span id="lives-count">❤️❤️❤️</span></span>
+                    </div>
+                    
+                    <div class="timer-bar-container">
+                        <div id="timer-bar" class="timer-bar"></div>
+                    </div>
+
+                    <div class="question-text" id="question-text">
+                        Loading Question...
+                    </div>
+
+                    <div class="options-grid" id="options-container">
+                        <!-- Buttons generated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen">
+            <span class="cricket-icon">🏆</span>
+            <h1>Match Finished!</h1>
+            <p class="result-message" id="result-message">Great Performance!</p>
+            <div class="final-score" id="final-score">0</div>
+            <button class="btn-restart" onclick="location.reload()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+    // --- Configuration ---
+    const TOTAL_TIME = 15; // Seconds
+    const POINTS_FAST = 6; // 0-3s
+    const POINTS_MED = 4;  // 3-7s
+    const POINTS_SLOW = 2; // 7-15s
+    const MAX_WRONG_LIVES = 3;
+
+    // Cricket Meme Images (Random selection)
+    const CRICKET_MEMES = [
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/SwD9JjkA073Og/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/jsTgk136sV71K/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/evVKsrjZEqVVWvE2VR/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/y3m2O9swqsKNG/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/THIImhwN2fV2q8EOvq/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/uBpi1Noa4A12zJobe7/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/4V5hlSNTLMp7q/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/3eQApZr22QK7m/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/AUMCXM1ruJfbbfdqPO/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/TSAlhAyBtbARCUlHuJ/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/TP6XTIfZHg6ntMpn0q/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2g1amFrN3NkaHprZW8zeXB0aDBvdjBrdmtuZDNsemlpcDdrcGFuZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KlmuaUE2Am7UNw9OeD/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3NmI3ZnA3M3p0YTNuaGhpaG4xczRzMDc4ZTR4Y3Q4YmtsNjgzMGtxOCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/Z6zWDBGoiVD7Y6esxN/giphy.gif',
+        'https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3NmI3ZnA3M3p0YTNuaGhpaG4xczRzMDc4ZTR4Y3Q4YmtsNjgzMGtxOCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/1rdLseLhDMiBnumJzM/giphy.gif'
+    ];
+
+    // --- State ---
+    let questions = [];
+    let randomizedQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let wrongAnswers = 0;
+    let timerInterval;
+    let timeLeft = TOTAL_TIME;
+    let isAnswering = false;
+    let currentMemeIndex = 0;
+
+    // --- DOM Elements ---
+    const loadingScreen = document.getElementById('loading-screen');
+    const errorScreen = document.getElementById('error-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const loadingStatus = document.getElementById('loading-status');
+    const errorText = document.getElementById('error-text');
+    
+    const questionCounter = document.getElementById('question-counter');
+    const scoreDisplay = document.getElementById('score-display');
+    const livesCount = document.getElementById('lives-count');
+    const timerBar = document.getElementById('timer-bar');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const memeDisplay = document.getElementById('meme-display');
+    const memeImage = document.getElementById('meme-image');
+    const resultMessage = document.getElementById('result-message');
+    const finalScore = document.getElementById('final-score');
+
+    // --- Auto-Load on Page Load ---
+    window.addEventListener('DOMContentLoaded', () => {
+        loadCSV();
+    });
+
+    // --- Functions ---
+    function loadCSV() {
+        fetch('finance_quiz_1000_questions.csv')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('CSV file not found!');
+                }
+                return response.text();
+            })
+            .then(text => {
+                parseCSV(text);
+            })
+            .catch(error => {
+                showError(error.message);
+            });
+    }
+
+    function parseCSV(text) {
+        const lines = text.trim().split('\n');
+        questions = [];
+        
+        // Skip header (index 0)
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+
+            // Handle CSV with commas inside quotes
+            const cols = parseCSVLine(line);
+            
+            if (cols.length >= 10) {
+                questions.push({
+                    id: cols[0],
+                    type: cols[1],
+                    difficulty: cols[2],
+                    topic: cols[3],
+                    question: cols[4],
+                    options: [cols[5], cols[6], cols[7], cols[8]],
+                    correct: cols[9].trim().toUpperCase() // Store as uppercase
+                });
+            }
+        }
+        
+        if(questions.length > 0) {
+            // Randomize questions
+            randomizedQuestions = shuffleArray([...questions]);
+            loadingStatus.textContent = `Loaded ${questions.length} questions. Starting match...`;
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                gameScreen.style.display = 'block';
+                showQuestion();
+            }, 1500);
+        } else {
+            showError('No questions found in CSV!');
+        }
+    }
+
+    function parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        result.push(current.trim());
+        return result;
+    }
+
+    // Fisher-Yates Shuffle Algorithm for Random Questions
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // Random Meme Selection
+    function getRandomMeme() {
+        return CRICKET_MEMES[Math.floor(Math.random() * CRICKET_MEMES.length)];
+    }
+
+    function showError(message) {
+        loadingScreen.style.display = 'none';
+        errorScreen.style.display = 'block';
+        errorText.textContent = message + '\n\nMake sure finance_quiz_1000_questions.csv is in the same folder!';
+    }
+
+    function showQuestion() {
+        if (currentQuestionIndex >= randomizedQuestions.length) {
+            endGame();
+            return;
+        }
+        
+        const q = randomizedQuestions[currentQuestionIndex];
+        questionCounter.textContent = `Q: ${currentQuestionIndex + 1}/${randomizedQuestions.length}`;
+        questionText.textContent = q.question;
+        optionsContainer.innerHTML = '';
+        
+        // Create buttons for each option
+        q.options.forEach((option, index) => {
+            if (option.trim() !== '') {
+                const btn = document.createElement('button');
+                btn.classList.add('option-btn');
+                btn.textContent = option;
+                btn.dataset.option = String.fromCharCode(65 + index); // A, B, C, D
+                btn.addEventListener('click', () => selectAnswer(btn));
+                optionsContainer.appendChild(btn);
+            }
+        });
+        
+        // Adjust grid for 2 options (True/False)
+        const validOptions = q.options.filter(opt => opt.trim() !== '');
+        if (validOptions.length === 2) {
+            optionsContainer.classList.add('two-options');
+        } else {
+            optionsContainer.classList.remove('two-options');
+        }
+        
+        resetTimer();
+        isAnswering = true;
+        showMeme();
+    }
+
+    function selectAnswer(btn) {
+        if (!isAnswering) return;
+        isAnswering = false;
+        const selected = btn.dataset.option;
+        const correct = randomizedQuestions[currentQuestionIndex].correct;
+        
+        if (selected === correct) {
+            btn.classList.add('correct');
+            calculateScore();
+        } else {
+            btn.classList.add('wrong');
+            wrongAnswers++;
+            updateLives();
+        }
+        
+        clearInterval(timerInterval);
+        setTimeout(() => {
+            currentQuestionIndex++;
+            showQuestion();
+        }, 1500);
+    }
+
+    function calculateScore() {
+        if (timeLeft > 12) {
+            score += POINTS_FAST;
+        } else if (timeLeft > 7) {
+            score += POINTS_MED;
+        } else {
+            score += POINTS_SLOW;
+        }
+        scoreDisplay.textContent = `Score: ${score}`;
+    }
+
+    function updateLives() {
+        const hearts = '❤️'.repeat(MAX_WRONG_LIVES - wrongAnswers) + '🖤'.repeat(wrongAnswers);
+        livesCount.innerHTML = hearts;
+        if (wrongAnswers >= MAX_WRONG_LIVES) {
+            endGame();
+        }
+    }
+
+    function resetTimer() {
+        timeLeft = TOTAL_TIME;
+        timerBar.style.width = '100%';
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft -= 0.1;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                clearInterval(timerInterval);
+                isAnswering = false;
+                wrongAnswers++;
+                updateLives();
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    showQuestion();
+                }, 1500);
+            }
+            timerBar.style.width = `${(timeLeft / TOTAL_TIME) * 100}%`;
+        }, 100);
+    }
+
+    function showMeme() {
+        memeImage.src = getRandomMeme();
+        memeDisplay.classList.add('active');
+        setTimeout(() => {
+            memeDisplay.classList.remove('active');
+        }, 1500);
+    }
+
+    function endGame() {
+        gameScreen.style.display = 'none';
+        resultScreen.style.display = 'block';
+        finalScore.textContent = score;
+        
+        if (score >= 5000) {
+            resultMessage.textContent = '🏆 Legendary Performance!';
+        } else if (score >= 3000) {
+            resultMessage.textContent = '⭐ Great Performance!';
+        } else if (score >= 1000) {
+            resultMessage.textContent = '👍 Good Effort!';
+        } else {
+            resultMessage.textContent = '💪 Better Luck Next Time!';
+        }
+    }
+</script>
+</body>
+</html>
